@@ -174,7 +174,13 @@ class TestScreenNavigationAndModals(unittest.TestCase):
     def setUp(self) -> None:
         pygame.init()
         SoundSynthesizer.set_enabled(False)
+        if os.path.exists("retrorevive_save.json"):
+            os.remove("retrorevive_save.json")
         self.app = GameApp()
+
+    def tearDown(self) -> None:
+        if os.path.exists("retrorevive_save.json"):
+            os.remove("retrorevive_save.json")
 
     def test_main_menu_to_screens(self) -> None:
         # Start Classic
@@ -261,7 +267,13 @@ class TestCoordinateScalingAndLetterboxing(unittest.TestCase):
     def setUp(self) -> None:
         pygame.init()
         SoundSynthesizer.set_enabled(False)
+        if os.path.exists("retrorevive_save.json"):
+            os.remove("retrorevive_save.json")
         self.app = GameApp()
+
+    def tearDown(self) -> None:
+        if os.path.exists("retrorevive_save.json"):
+            os.remove("retrorevive_save.json")
 
     def test_1280x720_native_coordinate_mapping(self) -> None:
         self.app.screen_width = 1280
@@ -295,7 +307,13 @@ class TestEndToEndGameplay(unittest.TestCase):
     def setUp(self) -> None:
         pygame.init()
         SoundSynthesizer.set_enabled(False)
+        if os.path.exists("retrorevive_save.json"):
+            os.remove("retrorevive_save.json")
         self.app = GameApp()
+
+    def tearDown(self) -> None:
+        if os.path.exists("retrorevive_save.json"):
+            os.remove("retrorevive_save.json")
 
     def test_classic_mode_turn_advancement(self) -> None:
         self.app._start_classic_game()
@@ -392,7 +410,13 @@ class TestKeyboardShortcutsAndAccessibility(unittest.TestCase):
     def setUp(self) -> None:
         pygame.init()
         SoundSynthesizer.set_enabled(False)
+        if os.path.exists("retrorevive_save.json"):
+            os.remove("retrorevive_save.json")
         self.app = GameApp()
+
+    def tearDown(self) -> None:
+        if os.path.exists("retrorevive_save.json"):
+            os.remove("retrorevive_save.json")
 
     def test_menu_numeric_hotkeys(self) -> None:
         # Press '1' to start Classic Mode
@@ -443,7 +467,13 @@ class TestAnnualSummaryAndDeltas(unittest.TestCase):
     def setUp(self) -> None:
         pygame.init()
         SoundSynthesizer.set_enabled(False)
+        if os.path.exists("retrorevive_save.json"):
+            os.remove("retrorevive_save.json")
         self.app = GameApp()
+
+    def tearDown(self) -> None:
+        if os.path.exists("retrorevive_save.json"):
+            os.remove("retrorevive_save.json")
 
     def test_annual_summary_metrics_recorded_on_turn_advance(self) -> None:
         self.app._start_classic_game()

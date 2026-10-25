@@ -1,25 +1,33 @@
-# RetroRevive — Hammurabi Reimagined
+# RetroRevive — Classic Computer Games Platform
 
-**Confluence Buildathon 2026 — Track: Resurrections**
+**Confluence Buildathon 2026 — Track: Resurrections**  
+**Repository:** [https://github.com/rohanbuilds-ai/RetroRevive.git](https://github.com/rohanbuilds-ai/RetroRevive.git)
 
-RetroRevive is a modernization of the classic 1978 computer game **HAMURABI**, originally edited and published by David H. Ahl in *BASIC Computer Games: Microcomputer Edition* (Creative Computing / Workman Publishing).
+RetroRevive brings classic computer games from the 1970s into the modern era through polished desktop graphics, animation, responsive controls, interactive tutorials, and optional modern enhancements—while strictly preserving original gameplay in verified Classic Modes.
 
-RetroRevive delivers a **dual-experience**:
-1. **Desktop Graphical Edition (`ui_pygame.py`):** A fully animated, visual kingdom-management game powered by Pygame. Features an ancient Sumerian world with an animated Euphrates river, Ziggurat of Ur, mudbrick granary silos, citizens, celestial day-night cycles, procedural 8-bit sound synthesis, steppers, and two rich gameplay modes (Classic 1978 & Enhanced Modern).
-2. **Terminal CLI Edition (`main.py`):** A faithful, standalone command-line modernization built strictly with the Python standard library, complete with optional 7-bit ASCII animations and ANSI color themes.
+Built as an extensible platform, RetroRevive currently features:
+1. **Central Graphical Game Library (`retrorevive.py`):** An arcade/retro-styled desktop hub featuring game catalog cards, category filters, real-time search, detail modals, and seamless launch/return routing.
+2. **Hammurabi: Reimagined (`ui_pygame.py`):** The iconic 1978 Sumerian kingdom simulation featuring an animated Mesopotamian landscape, Euphrates river, Ziggurat of Ur, Decree Preview ledger, Royal Advisors, and Scenarios.
+3. **23 Matches (`games/23_matches/`):** The timeless mathematical subtraction strategy game (Nim) by Bob Albrecht, featuring an animated wooden matchstick board, burning match effects, human-vs-computer play, and dual AI modes.
+4. **Coming Soon Index:** Metadata, provenance, and rules for upcoming classics: *Lunar Lander* (1973), *Super Star Trek* (1974), and *The Oregon Trail* (1971).
+5. **Standalone Terminal CLI Fallback (`main.py --cli`):** Zero-dependency pure standard library CLI for running both games in traditional text terminals.
 
 ---
 
 ## 1. Quick Start Guide
 
 ### System Prerequisites
-- **Python 3.10+** (verified on Python 3.13.7 64-bit on Windows)
-- **Standard Library** for core simulation and CLI game (zero third-party dependencies required for CLI)
+- **Python 3.10+** (tested and verified on Python 3.13.7 64-bit on Windows)
+- **Standard Library** for core simulation rules and CLI gameplay (zero external dependencies required)
 - **Pygame 2.6+** for the graphical desktop interface
 
-### Environment Setup (Desktop Edition)
-Create and activate a virtual environment, then install Pygame:
-```bash
+### Installation
+Clone the repository and set up the virtual environment:
+```powershell
+# Clone repository
+git clone https://github.com/rohanbuilds-ai/RetroRevive.git
+cd RetroRevive
+
 # Create virtual environment
 python -m venv .venv
 
@@ -28,219 +36,143 @@ python -m venv .venv
 # Or on Linux / macOS:
 # source .venv/bin/activate
 
-# Install the pinned desktop dependency
+# Install Pygame for the desktop interface
 pip install -r requirements-ui.txt
 ```
 
-### Launch the Desktop Graphical Game
-From the repository root:
-```bash
-python ui_pygame.py
-# Or directly via the virtual environment:
-.venv\Scripts\python.exe ui_pygame.py
+---
+
+## 2. Launch Commands
+
+### Launch the RetroRevive Game Library (Recommended)
+```powershell
+.venv\Scripts\python.exe main.py
+# Or directly:
+.venv\Scripts\python.exe retrorevive.py
 ```
+*Optional launcher flags:*
+- Start in fullscreen: `.venv\Scripts\python.exe main.py --fullscreen`
+- Launch Hammurabi directly: `.venv\Scripts\python.exe main.py --hammurabi`
+- Launch 23 Matches directly: `.venv\Scripts\python.exe main.py --matches`
 
-### Launch the Terminal CLI Game (Zero Dependencies)
-```bash
-# Animated terminal mode with color and ASCII landscapes
-python main.py
+### Launch Standalone Terminal CLI (Zero Dependencies)
+```powershell
+# Hammurabi historical terminal mode:
+.venv\Scripts\python.exe main.py --cli --no-animate --seed 42
 
-# Pure classic 1978 text terminal mode
-python main.py --no-animate
-```
-
-### Run the Automated Test Suite
-```bash
-python -m unittest discover -v
-# Runs all 60 tests across test_game.py, test_modern.py, and test_ui.py
-```
-
-### Run Automated Headless Visual UI Verification
-```bash
-python verify_ui.py
-# Renders all screens and responsive window sizes, saving verification screenshots to docs/screenshots/
+# 23 Matches historical terminal mode:
+.venv\Scripts\python.exe main.py --matches --cli
 ```
 
 ---
 
-## 2. Dual Gameplay Modes
+## 3. The Playable Games
 
-RetroRevive cleanly separates historical fidelity from modern convenience:
+### Game 1: Hammurabi: Reimagined (1978)
+- **Historical Provenance:** Authored by Doug Dyment (1968, PDP-8 FOCAL) and ported to BASIC by David H. Ahl (*101 BASIC Computer Games*, 1973; *BASIC Computer Games*, 1978).
+- **Core Mechanics:** Manage ancient Sumeria over a 10-year term. Allocate grain between feeding citizens (20 bu/person), planting seed (1 bu/acre, 1 person tends 10 acres), and trading land ($17$–$26$ bu/acre). Starving over 45% in any year triggers immediate impeachment.
+- **Available Modes:**
+  - **Classic 1978 Mode:** 100% faithful to the original Creative Computing BASIC rules, rat infestation timing, immigration curve, and 4-tier final evaluation (Nero, Fink, Assassination, Charlemagne).
+  - **Enhanced Mode:** Adds the Royal Council of Advisors (Grand Vizier, Royal Agronomist, High Treasurer) with one-click "APPLY ADVICE", 4 historical Scenario Challenges (The Great Drought, The Golden Era, Barbarian Incursion, Plague & Pestilence), Chronicle Log, and save/resume.
 
-### Mode 1: Classic 1978 Mode
-- **100% Faithful Simulation:** Strictly executes the verified 1978 Microsoft BASIC source code formulas.
-- **Authoritative Engine (`game_logic.py`):** Exact mathematical starting state (100 population, 1,000 acres, 2,800 bushels), land pricing ($17$–$26$ bu/acre), immigration curve, 40% rat infestation odds, 20% plague chance, strict labor constraint ($D < 10P$), and Ahl's iconic 4-tier final evaluation (Fink, Nero, Assassination, Charlemagne).
-- **Safe Input Protection:** Entering negative values safely triggers steward dismissal without crashing; malformed text triggers `?REDO FROM START`.
-
-### Mode 2: Enhanced Modern Mode
-- **Interactive 5-Step Tutorial:** Teaches the three pillars of ancient Sumerian economy (population workforce, land territory, and grain currency).
-- **The Royal Council of Sumeria (Contextual Advisors):**
-  - **The Vizier:** Evaluates macroeconomic stability, famine risk, and population growth.
-  - **The Granary Master:** Analyzes food reserves, recommends minimum rations (20 bu/person), and highlights rat loss history.
-  - **The Surveyor:** Evaluates current land trading prices (`VERY CHEAP`, `CHEAP`, `FAIR`, `EXPENSIVE`) and workforce planting capacity.
-  - *One-click "APPLY ADVICE" autofills optimal, safe turn decisions into your decree inputs.*
-- **4 Scenario Challenges:**
-  1. *The Great Drought:* 5-year survival challenge with depleted starting grain stores ($\ge 2,500$ bu victory).
-  2. *The Population Boom:* 7-year expansion challenge managing heavy immigration ($\ge 1,300$ ac, $\ge 120$ pop).
-  3. *The Granary Defense:* 6-year stockpile challenge fighting aggressive desert rodents ($\ge 3,500$ bu).
-  4. *Empire of Babylon:* 10-year master challenge to build a thriving ancient empire ($\ge 1,400$ ac, $\ge 130$ pop).
-- **Chronicle Event Log:** Retains a historical record of all prior year decrees, harvest yields, rat attacks, and citizen counts.
-- **Safe JSON Save & Resume:** Save your reign at any time and resume seamlessly.
+### Game 2: 23 Matches (1978)
+- **Historical Provenance:** Authored by Bob Albrecht (*People's Computer Company*, 1973) and published in *BASIC Computer Games* (1978, Ahl, pp. 177–178, game #93).
+- **Core Mechanics:** 23 matchsticks start on the table. The human player and computer alternate turns removing 1, 2, or 3 matches. You cannot remove more matches than remain. Whichever player is forced to take the very last match loses (Misère Nim rules).
+- **Available AI Modes:**
+  - **1978 Albrecht AI:** Replicates the historical rule where the computer takes $4 - Z$ matches (where $Z$ is your move). If the player knows the trick and takes 2 matches on the opening turn ($23 - 2 = 21$), the player can force a win!
+  - **Master Mind AI (Optimal Modular Nim):** Mathematically optimal AI that calculates modular remainder $r = (N - 1) \bmod 4$ and leaves you in a losing position at every turn.
 
 ---
 
-## 3. Visual UI & Audio Showcase
+## 4. Platform Architecture & Extensibility
 
-RetroRevive's desktop interface is built with procedural pixel rendering and sound synthesis:
-- **Royal Scribe's Decree Preview Ledger (`ui_theme.py`):**
-  - Live, deterministic consequence preview calculating projected land total, remaining grain reserves, fed vs. starving citizens, and workforce planting limits before submitting a decree.
-  - Strictly RNG-free; future events (1–5 bu/ac harvest yield, 40% rat loss) are explicitly labeled as uncertain rather than falsely forecasted.
-  - Real-time warnings if proposed rations risk catastrophic famine (>45% starvation impeachment).
-- **Procedural Sumerian World (`ui_world.py`):**
-  - Atmospheric desert sky with living day/evening transitions across reign years, moving clouds, and celestial sun.
-  - Stepped Ziggurat of Ur with flame braziers emitting smoke particles.
-  - Multi-layered flowing Euphrates river with undulating wave highlights.
-  - Mudbrick granary silos with real-time grain fill level gauges.
-  - Animated citizen villagers walking along riverbank pathways and flying bird flocks.
-  - Dynamic particle emitters for harvest chaff, scampering granary rats, and victory fireworks.
-- **Procedural 8-Bit Audio Synthesis (`ui_theme.py`):**
-  - Generates authentic 16-bit mono PCM waveforms in memory via standard `math.sin` and `struct`.
-  - Audio cues for button clicks, coin purchases, harvest chimes, famine warnings, and royal bells.
-  - Requires zero external `.wav` or `.mp3` assets and includes a one-click mute toggle.
-- **Fluid Layout & Resolution Independence:**
-  - Designed on an internal $1280 \times 720$ logical canvas with aspect-ratio letterboxing.
-  - Automatically scales cleanly to $1366 \times 768$, $1920 \times 1080$, $4\text{K}$, or arbitrary window sizes.
-  - Intuitive input widgets provide direct typing, quick-adjust steppers (`-100`, `-10`, `+10`, `+100`), `MAX`, and `CLR` buttons.
-- **Full Keyboard Navigability & Accessibility:**
-  - `Tab`: Cycle active input focus across allocation fields.
-  - `Enter`: Commit typed values or enact decree when ready.
-  - `1`–`6`: Quick-select main menu options and scenario challenge cards.
-  - `A`: Royal Advisors (Enhanced Mode) | `C`: Chronicle Log | `R`: Reset turn inputs | `S`: Quick save | `Esc`: Pause / Back.
-  - Reduced-motion toggle in settings for players preferring static backgrounds.
-
-### Verified Screenshot Gallery
-Generated programmatically via [`verify_ui.py`](file:///e:/GitHub%20Projects/RetroRevive/verify_ui.py) in [`docs/screenshots/`](file:///e:/GitHub%20Projects/RetroRevive/docs/screenshots):
-- `screenshot_main_menu.png`: Title screen with mode selection, scenario challenges, tutorial, and resume button.
-- `screenshot_classic_gameplay.png`: Annual royal report, animated world, resource indicators, and allocation decree inputs.
-- `screenshot_enhanced_advisors.png`: The Royal Council of Sumeria dialog with word-wrapped counsel and one-click decree autofill.
-- `screenshot_scenarios.png`: 4 scenario challenge cards with objectives and difficulty tiers.
-- `screenshot_tutorial.png`: 5-step interactive instructional walkthrough.
-- `screenshot_game_over.png`: Historical 10-year governance evaluation with metric breakdowns and rating banner.
-- `screenshot_scale_1366x768.png` & `screenshot_scale_1920x1080.png`: Responsive aspect-ratio scaling verification.
-
----
-
-## 4. Architecture & Codebase Map
+RetroRevive is architected to allow adding new retro games cleanly without modifying existing game logic or rewriting the display system:
 
 ```
 RetroRevive/
-├── ui_pygame.py             # Desktop graphical application (Pygame loop, event routing, modals, scaling)
-├── ui_theme.py              # Visual design system: Sumerian palette, fonts, PCM audio synthesizer, UI widgets
-├── ui_world.py              # Living animated world: ziggurat, river, silos, villagers, clouds, particle emitters
-├── modern_game_logic.py     # Modern engine: Scenarios, Royal Advisors, Chronicle log, JSON save/load
-├── game_logic.py            # Authoritative 1978 domain engine: state transitions, exact formulas, validations
-├── presentation.py          # Terminal presentation fallback: 7-bit ASCII landscapes, colors, and transitions
-├── main.py                  # CLI application entry point: terminal user loop, safe prompt parsing
-├── test_game.py             # Automated unit tests for classic engine and terminal presentation (26 tests)
-├── test_modern.py           # Automated unit tests for modern scenarios, advisors, and save/resume (7 tests)
-├── verify_ui.py             # Automated headless visual test script and screenshot generator
-├── requirements-ui.txt      # Pygame dependency pin (pygame==2.6.1)
-├── RULES.md                 # Canonical rules specification with line-by-line historical citations
-├── INTERFACE.md             # Complete component interfaces, random provider design, and architecture
-├── BUILD_PLAN.md            # Implementation roadmap, milestone checklists, and acceptance criteria
+├── main.py                     # Universal launcher & CLI dispatcher
+├── retrorevive.py              # Graphical Game Library Hub
+├── game_registry.py            # Central catalog metadata & search
+├── ui_theme.py                 # Shared typography, palettes, widgets, audio
+├── ui_pygame.py                # Hammurabi desktop game
+├── game_logic.py               # Hammurabi 1978 pure Python engine
+├── modern_game_logic.py        # Hammurabi enhanced logic & persistence
+├── games/
+│   └── 23_matches/
+│       ├── engine.py           # 23 Matches pure Python rule engine & AI
+│       ├── app.py              # 23 Matches Pygame matchstick board
+│       └── test_engine.py      # Automated tests for 23 Matches
+├── test_game.py                # Hammurabi core unit tests (26 tests)
+├── test_modern.py              # Hammurabi enhanced unit tests (7 tests)
+├── test_ui.py                  # Hammurabi UI unit tests (27 tests)
+├── test_platform.py            # Platform hub, registry & navigation tests (16 tests)
+├── verify_ui.py                # Visual screenshot verification script
 └── docs/
-    ├── scenarios.md         # 6 documented, repeatable gameplay scenarios and strategies
-    ├── compatibility.md     # Mathematical verification matrix, historical quirks, and primary citations
-    └── screenshots/         # Automated visual verification capture repository
+    ├── platform-architecture.md# Comprehensive architecture documentation
+    ├── game-sources.md         # Historical provenance and licensing
+    └── screenshots/            # Verified screenshots across resolutions
 ```
+
+### Adding a New Game in 3 Steps
+1. Create `games/<game_id>/engine.py` using only the Python standard library, with automated tests in `test_engine.py`.
+2. Create `games/<game_id>/app.py` taking `shared_window` and `on_exit_to_library` callback.
+3. Register the game metadata in `game_registry.py`.
+
+See [`docs/platform-architecture.md`](file:///e:/GitHub%20Projects/RetroRevive/docs/platform-architecture.md) for complete technical documentation.
 
 ---
 
-## 5. Automated Verification & Quality Assurance
+## 5. Automated Testing & Verification
 
-The automated test suite contains **60 tests** passing with 0 errors and 0 failures:
+RetroRevive enforces rigorous test isolation across core domain engines, modern additions, UI state transitions, and platform navigation.
 
-| Test Module | Test Count | Scope Verified |
-|---|---|---|
-| `test_game.py` | 26 tests | Initial state, land pricing, buy/sell/feed/plant validations, harvest yield, rat parity math, immigration formula, plague 50% halving, underfeeding, 45% annual impeachment, overfeeding statistical quirk, all 4 evaluation tiers, full 10-year deterministic simulation, safe input recovery, and terminal presentation routines. |
-| `test_modern.py` | 7 tests | Contextual advisor calculations, market price ratings, chronicle log persistence across years, scenario definitions, scenario victory/defeat conditions, JSON save and load roundtrip, corrupt save recovery, and nonexistent file handling. |
-| `test_ui.py` | 27 tests | UI widgets, steppers, buttons, modal dialogs, audio synthesizer waveform generation, world renderer tick updates, particle emitters, screen state routing, input re-entrancy, letterbox coordinate transformations, live Decree Preview calculations, famine impeachment warnings, tab focus cycling, and hotkey navigation. |
-
-Run tests:
-```bash
-python -m unittest discover -v
+### Run All 92 Automated Unit Tests
+```powershell
+.venv\Scripts\python.exe -m unittest discover -v
 ```
+**Test Suite Breakdown (92 Tests Total):**
+- `test_game.py`: **26 tests** (Historical formulas, land prices, harvest, rat infestation, safe prompt recovery, evaluation tiers).
+- `test_modern.py`: **7 tests** (Royal Advisors, Chronicle Log, Scenarios, JSON save/resume roundtrip).
+- `test_ui.py`: **27 tests** (Letterbox scaling, Decree Preview math, numeric steppers, text entry, keyboard navigation, modal focus).
+- `games.23_matches.test_engine`: **16 tests** (Initial state, bounds checking, integer validation, Misère termination, Albrecht AI, Optimal AI, repeatable scenarios).
+- `test_platform.py`: **16 tests** (Game Registry catalog queries, category filters, substring search, card cycling, details modal, launch/return lifecycle).
+
+### Run Automated Headless Visual UI Verification
+```powershell
+.venv\Scripts\python.exe verify_ui.py
+```
+Generates 12 verified screenshots in `docs/screenshots/` covering the platform library, game details modal, 23 Matches gameplay, 23 Matches victory, Hammurabi screens, and multi-resolution scaling ($1366\times768$ and $1920\times1080$).
 
 ---
 
-## 6. Terminal CLI Options (`main.py`)
+## 6. Controls & Accessibility
 
-For headless servers or environments without a graphical display, the terminal version provides comprehensive command-line controls:
+### Platform Hub Controls
+- `[1]`: Quick-launch Hammurabi
+- `[2]`: Quick-launch 23 Matches
+- `[←] / [→]`: Cycle selected game card
+- `[Enter] / [Space]`: Launch selected game (or open details if coming soon)
+- `[D]`: Open Game Details modal
+- `[S]`: Focus search bar (type query to filter games in real time)
+- `[Esc]`: Clear search / close modal / quit application
 
-| Flag | Description |
-|---|---|
-| *(default)* | Auto-detects terminal capabilities, displaying ASCII scenes and ANSI colors |
-| `--animate` | Forces ASCII city scene rendering and harvest/rat transitions |
-| `--no-animate` | Disables ASCII graphics (pure classic 1978 terminal output) |
-| `--color {auto,always,never}` | Controls ANSI terminal color sequences (default: auto) |
-| `--speed {fast,normal,slow}` | Animation playback speed |
-| `--seed <N>` | Runs with a fixed random seed for 100% reproducible outcomes |
-| `--relaxed` | Permits modern boundary tolerances ($D \le 10P$ and $Q \le A$) |
-| `--no-sound` | Suppresses terminal bell characters (`\a`) |
+### Hammurabi Controls
+- `[Tab] / [Shift+Tab]`: Cycle decree input fields
+- `[0-9]`: Direct typing of bushels and acres
+- `[+] / [-]`: Interactive stepper buttons ($+1$, $+10$, $+100$, Clear)
+- `[R]`: Reset rations to sustainable baseline ($20 \times \text{population}$)
+- `[Enter]`: Enact annual decree
 
-Example:
-```bash
-python main.py --animate --speed fast --seed 42 --no-sound
-```
-
----
-
-## 7. Historical Provenance & Citations
-
-- **Doug Dyment:** Original author of *The Sumer Game* (FOCAL, 1968) on the DEC PDP-8 at Digital Equipment Corporation.
-- **David H. Ahl:** Author of *101 BASIC Computer Games* (1973) and *BASIC Computer Games: Microcomputer Edition* (1978), who adapted the game to Microsoft BASIC and created the celebrated 10-year performance evaluation system.
-- **Digital Preservation Archives:** Special recognition to Tristano Ajmone (*The Hamurabi Collection*) and AtariArchives.org for maintaining verified historical source listings.
+### 23 Matches Controls
+- `[1]`, `[2]`, `[3]`: Take 1, 2, or 3 matches
+- Clickable action buttons with dynamic disabling when remaining matches $< 3$
+- Hoverable visual matchsticks with ember glow
+- `[Esc]`: Return to RetroRevive Game Library
 
 ---
 
-## 8. Reproducible Demonstration Sequence for Buildathon Judges
+## 7. Historical Attribution & Licensing
 
-To demonstrate RetroRevive effectively during judging:
-
-### Step 1: Launch & Atmospheric Showcase
-```bash
-python ui_pygame.py
-```
-- Observe the living procedural Sumerian kingdom: drifting clouds, celestial sun, flying birds, flowing Euphrates river, date palms, and stepped Ziggurat with flickering flame braziers.
-- Use keyboard numbers `[1]`–`[6]` or mouse to inspect menus and settings.
-
-### Step 2: Classic 1978 Mode & Royal Scribe's Decree Preview
-- Select **Play Classic Mode (1978)**.
-- Note the initial historical state: $100$ citizens, $1,000$ acres, $2,800$ bushels in store.
-- Adjust the **Feed Citizens** stepper or type values.
-- Observe the **Royal Scribe's Ledger** on the right updating live:
-  - Feeding $2,000$ bu reports `100/100 citizens fed (Optimal)`.
-  - Underfeeding to $800$ bu immediately triggers `DANGER: 60% starved! FINK IMPEACHMENT!`.
-  - Notice future events (*Harvest 1–5 bu/ac* and *Rats devouring*) are explicitly marked as *Uncertain*.
-- Click **Enact Decree** or press `[Enter]` to advance to Year 2. Observe the annual delta report and particle effects.
-
-### Step 3: Safe Input Handling & Historical Steward Dismissal
-- In Year 2, type `-5` into **Buy Land** and press `[Enter]`.
-- Observe the faithful historical outcome: The game does not crash; instead, Hammurabi displays:
-  `"I CANNOT DO WHAT YOU WISH. GET YOURSELF ANOTHER STEWARD!!!!!"`
-  and safely transitions to the evaluation screen with a **Play Again** button.
-
-### Step 4: Enhanced Mode & Royal Council Advisors
-- Return to Menu and launch **Play Enhanced Mode**.
-- Click **Royal Advisors** or press `[A]`:
-  - Review structured counsel from the **Grand Vizier**, **Granary Master**, and **Royal Surveyor**.
-  - Click **Apply Advice** to automatically populate safe, mathematically optimal turn decrees.
-- Click **Chronicle Log** or press `[C]` to inspect the historical log of prior year decisions.
-
-### Step 5: Automated Verification & Headless Validation
-Open a terminal and run the test suite:
-```bash
-python -m unittest discover -v
-```
-- Confirm **60 tests pass** in $< 1.0$s with 0 failures and 0 errors.
-- Run `python verify_ui.py` to demonstrate programmatic screenshot capture across $1280 \times 720$, $1366 \times 768$, and $1920 \times 1080$.
+- **RetroRevive Implementation:** Copyright © 2026 RetroRevive Contributors. Released under the open-source MIT License.
+- **Game Concepts & Formulas:** Derived from educational public computer literature edited by David H. Ahl (*BASIC Computer Games*, 1978, Creative Computing Press) and Bob Albrecht (*People's Computer Company*, 1973).
+- **Zero External Assets:** All fonts, graphics, world elements, and 8-bit sound effects are procedurally rendered in real time using the Python standard library and Pygame.

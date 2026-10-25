@@ -306,10 +306,33 @@ def play_game(
 
 
 def main() -> None:
-    """CLI entry point parsing flags and starting the game."""
+    """Universal entry point for RetroRevive platform, graphical games, and CLI fallbacks."""
     parser = argparse.ArgumentParser(
-        description="RetroRevive - Hammurabi (1978 Creative Computing Edition)"
+        description="RetroRevive — Classic Computer Games Platform (Buildathon 2026)"
     )
+    # Mode and launcher flags
+    parser.add_argument(
+        "--cli", "--no-pygame",
+        dest="force_cli",
+        action="store_true",
+        help="Force zero-dependency standard library terminal interface",
+    )
+    parser.add_argument(
+        "--hammurabi",
+        action="store_true",
+        help="Launch Hammurabi directly",
+    )
+    parser.add_argument(
+        "--matches",
+        action="store_true",
+        help="Launch 23 Matches directly",
+    )
+    parser.add_argument(
+        "--fullscreen",
+        action="store_true",
+        help="Launch desktop interface in fullscreen mode",
+    )
+    # Historical Hammurabi CLI options
     parser.add_argument(
         "--relaxed",
         action="store_true",
@@ -353,6 +376,47 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # Determine if CLI execution was explicitly requested or terminal flags provided
+    cli_flags_present = (
+        args.force_cli
+        or args.relaxed
+        or (args.seed is not None and not args.fullscreen)
+        or (args.animate is False)
+        or args.color != "auto"
+        or args.speed != "normal"
+    )
+
+    # 1. Try launching Pygame Graphical Interface unless CLI is forced
+    if not cli_flags_present:
+        try:
+            import pygame  # noqa: F401
+            if args.matches:
+                from games import matches_app
+                app = matches_app.MatchesApp(start_fullscreen=args.fullscreen)
+                app.run()
+                return
+            elif args.hammurabi:
+                from ui_pygame import GameApp
+                app = GameApp(start_fullscreen=args.fullscreen)
+                app.run()
+                return
+            else:
+                # Default: Launch RetroRevive Game Library Hub
+                import retrorevive
+                hub = retrorevive.RetroReviveHub(start_fullscreen=args.fullscreen)
+                hub.run()
+                return
+        except ImportError:
+            # Fallback smoothly to CLI if Pygame is not installed
+            pass
+
+    # 2. Terminal CLI Execution
+    if args.matches:
+        from games import matches_engine
+        matches_engine.play_cli()
+        return
+
+    # Standard Hammurabi Terminal CLI
     rng = DefaultRNG(seed=args.seed) if args.seed is not None else None
     strict_historical = not args.relaxed
     play_audio = not args.no_sound

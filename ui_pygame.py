@@ -13,7 +13,7 @@ Features:
 import math
 import os
 import sys
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 import pygame
 
 from game_logic import (
@@ -61,17 +61,27 @@ BASE_HEIGHT = 720
 class GameApp:
     """Main Pygame application controller managing state, screens, and window scaling."""
 
-    def __init__(self, start_fullscreen: bool = False) -> None:
+    def __init__(
+        self,
+        start_fullscreen: bool = False,
+        on_exit_to_library: Optional[Callable[[], None]] = None,
+        shared_window: Optional[pygame.Surface] = None,
+    ) -> None:
         pygame.init()
         SoundSynthesizer.init()
 
+        self.on_exit_to_library = on_exit_to_library
         self.screen_width = BASE_WIDTH
         self.screen_height = BASE_HEIGHT
-        flags = pygame.RESIZABLE
-        if start_fullscreen:
-            flags |= pygame.FULLSCREEN
 
-        self.window = pygame.display.set_mode((self.screen_width, self.screen_height), flags)
+        if shared_window is not None:
+            self.window = shared_window
+        else:
+            flags = pygame.RESIZABLE
+            if start_fullscreen:
+                flags |= pygame.FULLSCREEN
+            self.window = pygame.display.set_mode((self.screen_width, self.screen_height), flags)
+
         pygame.display.set_caption("RetroRevive: Hammurabi Reimagined")
 
         self.canvas = pygame.Surface((BASE_WIDTH, BASE_HEIGHT))
@@ -180,6 +190,7 @@ class GameApp:
         bx = (BASE_WIDTH - 380) // 2
         has_save = os.path.exists("retrorevive_save.json")
 
+        quit_label = "RETURN TO LIBRARY" if self.on_exit_to_library else "QUIT GAME"
         if has_save:
             start_y = 216
             spacing = 49
@@ -191,7 +202,7 @@ class GameApp:
                 UIButton((bx, start_y + spacing * 3, 380, btn_h), "SCENARIO CHALLENGES", self._open_scenarios_screen, color_scheme="sand"),
                 UIButton((bx, start_y + spacing * 4, 380, btn_h), "HOW TO PLAY & TUTORIAL", self._open_instructions_screen, color_scheme="sand"),
                 UIButton((bx, start_y + spacing * 5, 380, btn_h), "SETTINGS & AUDIO", self._open_settings_modal, color_scheme="sand"),
-                UIButton((bx, start_y + spacing * 6, 380, btn_h), "QUIT GAME", self.quit, color_scheme="crimson"),
+                UIButton((bx, start_y + spacing * 6, 380, btn_h), quit_label, self.quit, color_scheme="crimson"),
             ]
         else:
             start_y = 230
@@ -203,7 +214,7 @@ class GameApp:
                 UIButton((bx, start_y + spacing * 2, 380, btn_h), "SCENARIO CHALLENGES", self._open_scenarios_screen, color_scheme="sand"),
                 UIButton((bx, start_y + spacing * 3, 380, btn_h), "HOW TO PLAY & TUTORIAL", self._open_instructions_screen, color_scheme="sand"),
                 UIButton((bx, start_y + spacing * 4, 380, btn_h), "SETTINGS & AUDIO", self._open_settings_modal, color_scheme="sand"),
-                UIButton((bx, start_y + spacing * 5, 380, btn_h), "QUIT GAME", self.quit, color_scheme="crimson"),
+                UIButton((bx, start_y + spacing * 5, 380, btn_h), quit_label, self.quit, color_scheme="crimson"),
             ]
 
     def _on_input_changed(self, _: int) -> None:
@@ -657,7 +668,10 @@ class GameApp:
         self.current_screen = "INSTRUCTIONS"
 
     def quit(self) -> None:
-        self.is_running = False
+        if self.on_exit_to_library:
+            self.on_exit_to_library()
+        else:
+            self.is_running = False
 
     # -----------------------------------------------------------------------
     # Main Loop, Event Handling & Canvas Scaling

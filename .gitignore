@@ -15,6 +15,7 @@ checkpoint_baseline/
 checkpoint_ui_pre_fix/
 checkpoint_final_quality_upgrade/
 checkpoint_release_audit/
+checkpoint_platform/
 *.bak
 
 # Game runtime save data
