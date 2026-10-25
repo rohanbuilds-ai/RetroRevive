@@ -215,6 +215,7 @@ class MatchesApp:
         self._sync_visual_matches()
 
         if self.state.game_over:
+            self.status_message = "Game Over! You took the final match."
             SoundSynthesizer.play("fanfare" if self.state.winner == "HUMAN" else "warning")
             return
 
@@ -233,6 +234,7 @@ class MatchesApp:
         SoundSynthesizer.play("harvest")
 
         if self.state.game_over:
+            self.status_message = "Game Over! Computer took the final match!"
             SoundSynthesizer.play("fanfare" if self.state.winner == "HUMAN" else "warning")
         else:
             self.status_message = f"Computer removed {comp_take} match{'es' if comp_take > 1 else ''}. Your turn!"
@@ -245,7 +247,8 @@ class MatchesApp:
             m.is_taken = (i >= rem)
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        canvas_mouse = self._screen_to_canvas(pygame.mouse.get_pos())
+        raw_pos = getattr(event, "pos", pygame.mouse.get_pos())
+        canvas_mouse = self._screen_to_canvas(raw_pos)
 
         if event.type == pygame.QUIT:
             self.is_running = False
@@ -259,7 +262,7 @@ class MatchesApp:
 
         # Modal dismissal
         if self.show_rules_modal:
-            if event.type == pygame.KEYDOWN and event.key in (pygame.K_ESCAPE, pygame.K_RETURN, pygame.K_SPACE):
+            if event.type == pygame.KEYDOWN and event.key in (pygame.K_ESCAPE, pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE):
                 self.show_rules_modal = False
                 return
             self.btn_modal_close.handle_event(event, canvas_mouse)
@@ -280,7 +283,7 @@ class MatchesApp:
             if self.btn_over_library.handle_event(event, canvas_mouse):
                 return
             if event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_r):
+                if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE, pygame.K_r):
                     self._restart_game()
                 elif event.key == pygame.K_ESCAPE:
                     self._on_back_clicked()

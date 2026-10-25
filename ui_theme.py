@@ -437,10 +437,14 @@ class UINumberInput:
                     self.value = val
                     if self.on_change:
                         self.on_change(self.value)
-            elif event.key in (pygame.K_RETURN, pygame.K_ESCAPE):
+                elif not self.text_buffer:
+                    self.value = 0
+                    if self.on_change:
+                        self.on_change(0)
+            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_ESCAPE):
                 self.is_active = False
             else:
-                char = event.unicode
+                char = getattr(event, "unicode", "")
                 # Accept digits, minus sign (for testing negative values), decimals, letters (to test validation)
                 if char and len(self.text_buffer) < 14 and (char.isprintable() or char in "-+."):
                     self.text_buffer += char
@@ -576,7 +580,7 @@ class UIModal:
             if event.key == pygame.K_ESCAPE and self.action_buttons:
                 self.action_buttons[-1].trigger()
                 return True
-            elif event.key == pygame.K_RETURN and self.action_buttons:
+            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER) and self.action_buttons:
                 self.action_buttons[0].trigger()
                 return True
 

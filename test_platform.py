@@ -165,6 +165,19 @@ class TestRetroReviveHubNavigation(unittest.TestCase):
         self.hub.handle_event(ev_esc)
         self.assertIsNone(self.hub.selected_game_for_modal)
 
+    def test_search_synthetic_event_and_keypad_enter(self) -> None:
+        # Activate search
+        self.hub.is_search_active = True
+        # Synthetic event without unicode must not crash
+        ev_no_unicode = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_UNKNOWN})
+        self.hub.handle_event(ev_no_unicode)
+        self.assertTrue(self.hub.is_search_active)
+
+        # KP_ENTER closes search focus
+        ev_kp_enter = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_KP_ENTER})
+        self.hub.handle_event(ev_kp_enter)
+        self.assertFalse(self.hub.is_search_active)
+
 
 class TestGameLaunchAndReturn(unittest.TestCase):
     """Verifies clean launching of games and stateful return to library."""
@@ -268,6 +281,26 @@ class TestMatchesAppUI(unittest.TestCase):
         self.assertEqual(self.app.state.matches_remaining, 23)
         self.assertFalse(self.app.state.game_over)
 
+    def test_23matches_keypad_enter_and_game_over_status(self) -> None:
+        # Toggle rules with button then dismiss with KP_ENTER
+        self.app._toggle_rules()
+        self.assertTrue(self.app.show_rules_modal)
+        ev_kp_enter = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_KP_ENTER})
+        self.app.handle_event(ev_kp_enter)
+        self.assertFalse(self.app.show_rules_modal)
+
+        # Force game over by taking remaining matches
+        self.app.state.matches_remaining = 1
+        self.app._on_human_move(1)
+        self.assertTrue(self.app.state.game_over)
+        self.assertEqual(self.app.state.winner, "COMPUTER")
+        self.assertIn("Game Over", self.app.status_message)
+
+        # KP_ENTER restarts game from game over
+        self.app.handle_event(ev_kp_enter)
+        self.assertFalse(self.app.state.game_over)
+        self.assertEqual(self.app.state.matches_remaining, 23)
+
 
 class TestLanderAppUI(unittest.TestCase):
     """Verifies Lunar Lander graphical UI interactions, telemetry, presets, and modals."""
@@ -341,6 +374,24 @@ class TestLanderAppUI(unittest.TestCase):
         self.assertEqual(self.app.state.altitude, 120.0)
         self.assertEqual(self.app.state.fuel_remaining, 16500.0)
         self.assertEqual(self.app.current_burn_input, 0.0)
+
+    def test_lunar_lander_m_key_toggles_rules_modal(self) -> None:
+        self.assertFalse(self.app.show_rules_modal)
+        # Press key 'M' toggles flight manual
+        ev_m = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_m})
+        self.app.handle_event(ev_m)
+        self.assertTrue(self.app.show_rules_modal)
+
+        # Press key 'M' again toggles it off
+        self.app.handle_event(ev_m)
+        self.assertFalse(self.app.show_rules_modal)
+
+    def test_lunar_lander_keypad_enter_executes_burn(self) -> None:
+        self.app._set_burn(50.0)
+        ev_kp_enter = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_KP_ENTER})
+        self.app.handle_event(ev_kp_enter)
+        self.assertEqual(self.app.state.time_elapsed, 10.0)
+        self.assertEqual(self.app.state.fuel_remaining, 16000.0)
 
 
 if __name__ == "__main__":

@@ -123,8 +123,8 @@ RetroRevive/
 │       └── test_engine.py      # Automated tests for Lunar Lander (17 tests)
 ├── test_game.py                # Hammurabi core unit tests (26 tests)
 ├── test_modern.py              # Hammurabi enhanced unit tests (7 tests)
-├── test_ui.py                  # Hammurabi UI unit tests (27 tests)
-├── test_platform.py            # Platform hub, registry, and UI integration tests (24 tests)
+├── test_ui.py                  # Hammurabi UI unit tests (31 tests)
+├── test_platform.py            # Platform hub, registry, and UI integration tests (28 tests)
 ├── verify_ui.py                # Visual screenshot verification script
 └── docs/
     ├── platform-architecture.md# Comprehensive architecture documentation
@@ -146,17 +146,17 @@ See [`docs/platform-architecture.md`](file:///e:/GitHub%20Projects/RetroRevive/d
 
 RetroRevive enforces rigorous test isolation across core domain engines, modern additions, UI state transitions, and platform navigation.
 
-### Run All 117 Automated Unit Tests
+### Run All 125 Automated Unit Tests
 ```powershell
 .venv\Scripts\python.exe -m unittest discover -v
 ```
-**Test Suite Breakdown (117 Tests Total):**
+**Test Suite Breakdown (125 Tests Total):**
 - `test_game.py`: **26 tests** (Historical formulas, land prices, harvest, rat infestation, safe prompt recovery, evaluation tiers).
 - `test_modern.py`: **7 tests** (Royal Advisors, Chronicle Log, Scenarios, JSON save/resume roundtrip).
-- `test_ui.py`: **27 tests** (Letterbox scaling, Decree Preview math, numeric steppers, text entry, keyboard navigation, modal focus).
+- `test_ui.py`: **31 tests** (Letterbox scaling, Decree Preview math, numeric steppers, text entry, Enter/Keypad Enter submission, Shift+Tab cycling, synthetic event safety, modal focus).
 - `games.23_matches.test_engine`: **16 tests** (Initial state, bounds checking, integer validation, Misère termination, Albrecht AI, Optimal AI, repeatable scenarios).
 - `games.lunar_lander.test_engine`: **17 tests** (Initial LEM state, burn rate validation, 5th-order Taylor series deceleration, free-fall under gravity, touchdown interpolation, 4 landing outcome tiers, crater depth formula).
-- `test_platform.py`: **24 tests** (Game Registry catalog queries, category filters, substring search, card cycling, details modal, launch/return lifecycle, 23 Matches UI interaction, Lunar Lander telemetry and controls).
+- `test_platform.py`: **28 tests** (Game Registry catalog queries, category filters, substring search, card cycling, details modal, launch/return lifecycle, 23 Matches UI interaction and keypad shortcuts, Lunar Lander telemetry, M flight manual toggle, and controls).
 
 ### Run Automated Headless Visual UI Verification
 ```powershell
