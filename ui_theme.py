@@ -13,6 +13,8 @@ import struct
 from typing import Callable, List, Optional, Tuple
 import pygame
 
+from game_logic import GameState
+
 
 # ---------------------------------------------------------------------------
 # Mesopotamian Color Palette
@@ -56,6 +58,7 @@ class Palette:
     CRIMSON_LIGHT = (230, 75, 75)
     PESTILENCE = (145, 45, 155)
     SUCCESS_GREEN = (50, 175, 75)
+    AMBER_WARN = (225, 140, 30)
 
     # Text & Overlays
     TEXT_TITLE = (255, 245, 225)
@@ -63,6 +66,11 @@ class Palette:
     TEXT_MUTED = (175, 160, 140)
     TEXT_DARK = (30, 24, 18)
     OVERLAY_DIM = (12, 10, 8, 190)
+
+    # Luxury & Ledger Highlights
+    PARCHMENT_BG = (36, 28, 22)
+    BADGE_BG_DARK = (24, 18, 14)
+    FOCUS_RING = (255, 225, 90)
 
 
 # ---------------------------------------------------------------------------
@@ -187,6 +195,9 @@ class SoundSynthesizer:
         cls._sounds["harvest"] = cls._create_tone(659, 0.15, volume=0.25, waveform="triangle")
         cls._sounds["warning"] = cls._create_tone(330, 0.25, volume=0.3, waveform="square")
         cls._sounds["bell"] = cls._create_tone(523, 0.4, volume=0.3, waveform="sine")
+        cls._sounds["gong"] = cls._create_tone(220, 0.45, volume=0.3, waveform="sine")
+        cls._sounds["chime"] = cls._create_tone(1046, 0.18, volume=0.2, waveform="sine")
+        cls._sounds["plague"] = cls._create_tone(180, 0.5, volume=0.35, waveform="square")
 
     @classmethod
     def play(cls, sound_name: str) -> None:
@@ -224,7 +235,16 @@ class UIButton:
         self.color_scheme = color_scheme
         self.is_hovered = False
         self.is_pressed = False
+        self.is_focused = False
         self.is_enabled = True
+
+    def trigger(self) -> bool:
+        """Executes callback programmatically via keyboard or script."""
+        if self.is_enabled and self.callback:
+            SoundSynthesizer.play("click")
+            self.callback()
+            return True
+        return False
 
     def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> bool:
         if not self.is_enabled:
@@ -283,6 +303,14 @@ class UIButton:
         pygame.draw.rect(surface, bg_col, draw_rect, border_radius=6)
         pygame.draw.rect(surface, border_col, draw_rect, width=2, border_radius=6)
 
+        # Highlight shimmer when hovered
+        if self.is_hovered and self.is_enabled:
+            pygame.draw.line(surface, (255, 255, 255, 70), (draw_rect.x + 4, draw_rect.y + 2), (draw_rect.right - 4, draw_rect.y + 2), 1)
+
+        # Focus ring when selected via keyboard
+        if self.is_focused and self.is_enabled:
+            pygame.draw.rect(surface, Palette.FOCUS_RING, draw_rect.inflate(6, 6), width=2, border_radius=8)
+
         # Text label
         font = FontManager.header(self.font_size) if self.primary else FontManager.body(self.font_size)
         text_surf = font.render(self.text, True, text_col)
@@ -305,6 +333,7 @@ class UINumberInput:
         max_value: int = 100000,
         step: int = 10,
         label: str = "",
+        unit_label: str = "",
         on_change: Optional[Callable[[int], None]] = None,
     ) -> None:
         self.rect = pygame.Rect(rect)
@@ -313,27 +342,32 @@ class UINumberInput:
         self.max_value = max_value
         self.step = step
         self.label = label
+        self.unit_label = unit_label
         self.on_change = on_change
         self.is_active = False
         self.text_buffer = str(initial_value)
         self.error_message: Optional[str] = None
         self.is_enabled = True
 
-        # Build stepper button positions
+        # Build stepper button positions scaled to input width
         bx, by, bw, bh = self.rect.x, self.rect.y, self.rect.width, self.rect.height
         btn_h = 32
         btn_y = by + bh - btn_h - 6
         spacing = 4
 
         # Buttons: [-100], [-10], [+10], [+100], [MAX], [CLEAR]
-        b_w = 46
+        inner_w = bw - 16
+        b_w = max(42, (inner_w - 5 * spacing) // 6)
+        rem = inner_w - (6 * b_w + 5 * spacing)
+        start_bx = bx + 8 + rem // 2
+
         self.buttons: List[UIButton] = [
-            UIButton((bx + 8, btn_y, b_w, btn_h), f"-{step * 10}", lambda: self.adjust(-step * 10), font_size=13),
-            UIButton((bx + 8 + (b_w + spacing), btn_y, b_w, btn_h), f"-{step}", lambda: self.adjust(-step), font_size=13),
-            UIButton((bx + 8 + (b_w + spacing) * 2, btn_y, b_w, btn_h), f"+{step}", lambda: self.adjust(step), font_size=13),
-            UIButton((bx + 8 + (b_w + spacing) * 3, btn_y, b_w, btn_h), f"+{step * 10}", lambda: self.adjust(step * 10), font_size=13),
-            UIButton((bx + 8 + (b_w + spacing) * 4 + 4, btn_y, 48, btn_h), "MAX", self.set_max, font_size=13, color_scheme="lapis"),
-            UIButton((bx + 8 + (b_w + spacing) * 5 + 8, btn_y, 44, btn_h), "CLR", self.clear, font_size=13),
+            UIButton((start_bx, btn_y, b_w, btn_h), f"-{step * 10}", lambda: self.adjust(-step * 10), font_size=13),
+            UIButton((start_bx + (b_w + spacing), btn_y, b_w, btn_h), f"-{step}", lambda: self.adjust(-step), font_size=13),
+            UIButton((start_bx + (b_w + spacing) * 2, btn_y, b_w, btn_h), f"+{step}", lambda: self.adjust(step), font_size=13),
+            UIButton((start_bx + (b_w + spacing) * 3, btn_y, b_w, btn_h), f"+{step * 10}", lambda: self.adjust(step * 10), font_size=13),
+            UIButton((start_bx + (b_w + spacing) * 4, btn_y, b_w, btn_h), "MAX", self.set_max, font_size=13, color_scheme="lapis"),
+            UIButton((start_bx + (b_w + spacing) * 5, btn_y, b_w, btn_h), "CLR", self.clear, font_size=13),
         ]
 
     def parse_integer(self) -> Tuple[bool, Optional[int], Optional[str]]:
@@ -459,6 +493,11 @@ class UINumberInput:
         val_rect = val_surf.get_rect(midleft=(input_box.x + 10, input_box.centery))
         surface.blit(val_surf, val_rect)
 
+        # Unit tag right-aligned inside input box
+        if self.unit_label:
+            u_surf = FontManager.small(12).render(self.unit_label, True, Palette.TEXT_MUTED)
+            surface.blit(u_surf, (input_box.right - u_surf.get_width() - 8, input_box.centery - u_surf.get_height() // 2))
+
         # Cursor when typing
         if self.is_active and (pygame.time.get_ticks() // 500) % 2 == 0:
             cursor_x = val_rect.right + 2
@@ -533,6 +572,14 @@ class UIModal:
             )
 
     def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> bool:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE and self.action_buttons:
+                self.action_buttons[-1].trigger()
+                return True
+            elif event.key == pygame.K_RETURN and self.action_buttons:
+                self.action_buttons[0].trigger()
+                return True
+
         for btn in self.action_buttons:
             if btn.handle_event(event, mouse_pos):
                 return True
@@ -581,23 +628,178 @@ class UIModal:
 class UIToast:
     """Sliding feedback notification placed neatly below HUD."""
 
-    def __init__(self, message: str, duration_sec: float = 2.5) -> None:
+    def __init__(self, message: str, duration_sec: float = 2.5, category: str = "info") -> None:
         self.message = message
         self.duration = duration_sec
+        self.category = category  # "info", "success", "warning", "crimson"
         self.created_at = pygame.time.get_ticks()
 
     def is_alive(self) -> bool:
         return (pygame.time.get_ticks() - self.created_at) < (self.duration * 1000)
 
     def draw(self, surface: pygame.Surface) -> None:
-        font = FontManager.header(17)
+        font = FontManager.header(16)
         text_surf = font.render(self.message, True, Palette.TEXT_TITLE)
-        toast_w = text_surf.get_width() + 40
+        toast_w = text_surf.get_width() + 48
         toast_h = 38
         # Position below the top HUD in the right-hand sky area clear of cards
-        tx = max(610, 1250 - toast_w)
+        tx = max(550, 1250 - toast_w)
         toast_rect = pygame.Rect(tx, 74, toast_w, toast_h)
 
-        pygame.draw.rect(surface, (32, 26, 20), toast_rect, border_radius=8)
-        pygame.draw.rect(surface, Palette.GOLD_LIGHT, toast_rect, width=2, border_radius=8)
-        surface.blit(text_surf, (toast_rect.x + 20, toast_rect.y + 8))
+        if self.category == "warning" or "!" in self.message or "?REDO" in self.message:
+            border_col = Palette.AMBER_WARN
+            badge_col = Palette.CRIMSON_LIGHT
+            tag = "[!]"
+        elif self.category == "success":
+            border_col = Palette.SUCCESS_GREEN
+            badge_col = Palette.SUCCESS_GREEN
+            tag = "[✓]"
+        else:
+            border_col = Palette.GOLD_LIGHT
+            badge_col = Palette.GOLD_BASE
+            tag = "[i]"
+
+        pygame.draw.rect(surface, (28, 22, 18), toast_rect, border_radius=8)
+        pygame.draw.rect(surface, border_col, toast_rect, width=2, border_radius=8)
+
+        tag_surf = FontManager.mono(13).render(tag, True, badge_col)
+        surface.blit(tag_surf, (toast_rect.x + 10, toast_rect.y + 10))
+        surface.blit(text_surf, (toast_rect.x + 36, toast_rect.y + 8))
+
+
+# ---------------------------------------------------------------------------
+# Royal Scribe's Decree Preview Model & Widget
+# ---------------------------------------------------------------------------
+
+class DecreePreviewData:
+    """Calculates all deterministic outcomes of proposed decrees without RNG or state changes."""
+
+    def __init__(self, state: GameState, buy: int, sell: int, feed: int, plant: int) -> None:
+        self.state = state
+        self.buy = max(0, buy)
+        self.sell = max(0, sell)
+        self.feed = max(0, feed)
+        self.plant = max(0, plant)
+
+        # 1. Land calculation
+        self.net_land_change = self.buy - self.sell
+        self.projected_acres = state.acres + self.net_land_change
+
+        # 2. Grain from land transaction
+        self.land_cost = self.buy * state.land_price
+        self.land_revenue = self.sell * state.land_price
+        self.grain_after_land = state.bushels - self.land_cost + self.land_revenue
+
+        # 3. Feeding calculation
+        self.grain_after_feed = self.grain_after_land - self.feed
+        self.citizens_fed = min(state.population, max(0, self.feed // 20))
+        self.starving_citizens = max(0, state.population - self.citizens_fed)
+        self.starvation_pct = (self.starving_citizens / state.population * 100.0) if state.population > 0 else 0.0
+
+        # 4. Sowing calculation
+        self.seed_bushels = self.plant // 2
+        self.grain_balance = self.grain_after_feed - self.seed_bushels
+        self.labor_capacity = max(0, state.population * 10 - 1)  # 1978 historical rule (D < 10*P)
+
+        # 5. Feasibility evaluation
+        self.is_valid = True
+        self.critical_error: Optional[str] = None
+        self.warning_msg: Optional[str] = None
+
+        if self.buy > 0 and self.sell > 0:
+            self.is_valid = False
+            self.critical_error = "Cannot buy and sell land in same year."
+        elif self.grain_after_land < 0:
+            self.is_valid = False
+            self.critical_error = f"Cannot afford land purchase (short {abs(self.grain_after_land)} bu)."
+        elif self.grain_balance < 0:
+            self.is_valid = False
+            self.critical_error = f"Grain deficit: short by {abs(self.grain_balance)} bushels."
+        elif self.plant > self.projected_acres:
+            self.is_valid = False
+            self.critical_error = f"Planting {self.plant} ac exceeds owned land ({self.projected_acres} ac)."
+        elif self.plant > self.labor_capacity:
+            self.is_valid = False
+            self.critical_error = f"Workforce limit: citizens can tend max {self.labor_capacity} ac."
+        elif self.projected_acres <= 0:
+            self.is_valid = False
+            self.critical_error = "Selling all land is not permitted."
+
+        if self.starvation_pct > 45.0:
+            self.warning_msg = f"DANGER: {self.starvation_pct:.0f}% starved! FINK IMPEACHMENT!"
+        elif self.starving_citizens > 0:
+            self.warning_msg = f"WARNING: {self.starving_citizens} citizens ({self.starvation_pct:.1f}%) will starve."
+        else:
+            self.warning_msg = f"Optimal: All {state.population} citizens fully rationed."
+
+
+class UIDecreePreview:
+    """Renders a parchment-styled Royal Scribe's Preview Ledger."""
+
+    def __init__(self, rect: Tuple[int, int, int, int]) -> None:
+        self.rect = pygame.Rect(rect)
+
+    def draw(self, surface: pygame.Surface, preview: DecreePreviewData) -> None:
+        # Ledger Panel Background
+        pygame.draw.rect(surface, (28, 22, 17), self.rect, border_radius=8)
+        border_col = Palette.GOLD_LIGHT if preview.is_valid else Palette.CRIMSON_LIGHT
+        pygame.draw.rect(surface, border_col, self.rect, width=2, border_radius=8)
+
+        # Header Title
+        hdr_surf = FontManager.header(15).render("ROYAL SCRIBE'S LEDGER", True, Palette.GOLD_PALE)
+        surface.blit(hdr_surf, (self.rect.x + 12, self.rect.y + 8))
+
+        # Status badge (top right)
+        status_text = "FEASIBLE" if preview.is_valid else "DEFICIT"
+        badge_bg = Palette.SUCCESS_GREEN if preview.is_valid else Palette.CRIMSON
+        badge_rect = pygame.Rect(self.rect.right - 88, self.rect.y + 7, 78, 22)
+        pygame.draw.rect(surface, badge_bg, badge_rect, border_radius=4)
+        b_text_surf = FontManager.mono(12).render(status_text, True, Palette.TEXT_TITLE)
+        surface.blit(b_text_surf, b_text_surf.get_rect(center=badge_rect.center))
+
+        pygame.draw.line(surface, Palette.GOLD_DARK, (self.rect.x + 10, self.rect.y + 34), (self.rect.right - 10, self.rect.y + 34), 1)
+
+        # Calculable Projection Lines
+        py = self.rect.y + 40
+        lh = 22
+
+        # 1. Projected Land
+        land_delta = f"(+{preview.buy})" if preview.buy > 0 else (f"(-{preview.sell})" if preview.sell > 0 else "(+0)")
+        surface.blit(FontManager.small(13).render("Est. Land Total:", True, Palette.TEXT_MUTED), (self.rect.x + 12, py))
+        surface.blit(FontManager.mono(13).render(f"{preview.projected_acres} ac {land_delta}", True, Palette.TEXT_TITLE), (self.rect.x + 126, py))
+        py += lh
+
+        # 2. Grain Reserve
+        grain_col = Palette.SUCCESS_GREEN if preview.grain_balance >= 0 else Palette.CRIMSON_LIGHT
+        surface.blit(FontManager.small(13).render("Grain Balance:", True, Palette.TEXT_MUTED), (self.rect.x + 12, py))
+        surface.blit(FontManager.mono(13).render(f"{preview.grain_balance} bu remaining", True, grain_col), (self.rect.x + 126, py))
+        py += lh
+
+        # 3. Citizens Fed
+        feed_col = Palette.CRIMSON_LIGHT if preview.starving_citizens > 0 else Palette.TEXT_TITLE
+        surface.blit(FontManager.small(13).render("Citizens Fed:", True, Palette.TEXT_MUTED), (self.rect.x + 12, py))
+        surface.blit(FontManager.mono(13).render(f"{preview.citizens_fed}/{preview.state.population} fed", True, feed_col), (self.rect.x + 126, py))
+        py += lh
+
+        # 4. Sowing & Labor
+        surface.blit(FontManager.small(13).render("Seed / Labor:", True, Palette.TEXT_MUTED), (self.rect.x + 12, py))
+        surface.blit(FontManager.mono(13).render(f"{preview.seed_bushels} bu  |  Cap: {preview.labor_capacity} ac", True, Palette.TEXT_TITLE), (self.rect.x + 126, py))
+        py += lh
+
+        # Divider
+        pygame.draw.line(surface, (60, 48, 38), (self.rect.x + 10, py + 2), (self.rect.right - 10, py + 2), 1)
+        py += 6
+
+        # 5. Warning or Note
+        if preview.critical_error:
+            warn_surf = FontManager.small(11).render(preview.critical_error, True, Palette.CRIMSON_LIGHT)
+            surface.blit(warn_surf, (self.rect.x + 12, py))
+        elif preview.warning_msg:
+            col = Palette.AMBER_WARN if "WARNING" in preview.warning_msg or "DANGER" in preview.warning_msg else Palette.SUCCESS_GREEN
+            warn_surf = FontManager.small(11).render(preview.warning_msg, True, col)
+            surface.blit(warn_surf, (self.rect.x + 12, py))
+        py += 18
+
+        # 6. Explicit Uncertainty Label
+        uncert_surf = FontManager.small(10).render("* Harvest (1-5 bu/ac) & Rats (0-50%) determined on decree.", True, Palette.TEXT_MUTED)
+        surface.blit(uncert_surf, (self.rect.x + 12, py))

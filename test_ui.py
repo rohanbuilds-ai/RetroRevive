@@ -15,7 +15,15 @@ os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 from game_logic import GameState
 from modern_game_logic import SCENARIOS
 from ui_pygame import BASE_HEIGHT, BASE_WIDTH, GameApp
-from ui_theme import SoundSynthesizer, UIButton, UINumberInput
+from ui_theme import (
+    DecreePreviewData,
+    SoundSynthesizer,
+    UIButton,
+    UIDecreePreview,
+    UIModal,
+    UINumberInput,
+    UIToast,
+)
 
 
 class TestUIButtonClicks(unittest.TestCase):
@@ -326,6 +334,135 @@ class TestEndToEndGameplay(unittest.TestCase):
         self.assertEqual(st_before.year, st_after.year)
         self.assertEqual(st_before.bushels, st_after.bushels)
         self.assertIsNotNone(self.app.input_buy.error_message)
+
+
+class TestDecreePreviewCalculations(unittest.TestCase):
+    """Verifies deterministic, RNG-free decree calculations and validation warnings."""
+
+    def setUp(self) -> None:
+        self.base_state = GameState(
+            year=1, population=100, bushels=2800, acres=1000, land_price=20,
+            starved_this_year=0, starved_total=0, starved_pct_avg=0.0,
+            immigrants_this_year=5, harvest_yield=3, rats_ate=200,
+            plague_struck=False, plague_next_year=False, is_over=False
+        )
+
+    def test_preview_full_feeding_sustainable(self) -> None:
+        # Feed 2000 (100 * 20), plant 800 (requires 400 bushels) -> 400 remaining
+        p = DecreePreviewData(self.base_state, buy=0, sell=0, feed=2000, plant=800)
+        self.assertTrue(p.is_valid)
+        self.assertIsNone(p.critical_error)
+        self.assertEqual(p.citizens_fed, 100)
+        self.assertEqual(p.starving_citizens, 0)
+        self.assertEqual(p.seed_bushels, 400)
+        self.assertEqual(p.grain_balance, 400)
+        self.assertIn("fully rationed", p.warning_msg.lower())
+
+    def test_preview_starvation_warning_and_impeachment_threat(self) -> None:
+        # Severe underfeeding: only feed 800 (40 fed, 60 starved = 60%)
+        p = DecreePreviewData(self.base_state, buy=0, sell=0, feed=800, plant=500)
+        self.assertTrue(p.is_valid)  # Mechanically valid input, but catastrophic consequence
+        self.assertEqual(p.citizens_fed, 40)
+        self.assertEqual(p.starving_citizens, 60)
+        self.assertEqual(p.starvation_pct, 60.0)
+        self.assertIn("impeachment", p.warning_msg.lower())
+
+    def test_preview_grain_deficit_detection(self) -> None:
+        # Over-allocating grain: 2000 feed + 2000 plant (needs 1000 bu seed) = 3000 bu > 2800 bu
+        p = DecreePreviewData(self.base_state, buy=0, sell=0, feed=2000, plant=2000)
+        self.assertFalse(p.is_valid)
+        self.assertEqual(p.grain_balance, -200)
+        self.assertIn("deficit", p.critical_error.lower())
+
+    def test_preview_workforce_capacity_limit(self) -> None:
+        # 100 people can cultivate at most 999 acres (D < 10*P)
+        p = DecreePreviewData(self.base_state, buy=0, sell=0, feed=2000, plant=1000)
+        self.assertFalse(p.is_valid)
+        self.assertIn("workforce limit", p.critical_error.lower())
+
+    def test_preview_buy_and_sell_conflict(self) -> None:
+        p = DecreePreviewData(self.base_state, buy=50, sell=50, feed=2000, plant=500)
+        self.assertFalse(p.is_valid)
+        self.assertIn("cannot buy and sell", p.critical_error.lower())
+
+
+class TestKeyboardShortcutsAndAccessibility(unittest.TestCase):
+    """Verifies full keyboard navigability across screens and modal dialogs."""
+
+    def setUp(self) -> None:
+        pygame.init()
+        SoundSynthesizer.set_enabled(False)
+        self.app = GameApp()
+
+    def test_menu_numeric_hotkeys(self) -> None:
+        # Press '1' to start Classic Mode
+        ev_1 = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_1})
+        self.app.handle_event(ev_1)
+        self.assertEqual(self.app.current_screen, "GAMEPLAY")
+        self.assertEqual(self.app.active_mode, "CLASSIC")
+
+        # Return and press '3' to open Scenarios
+        self.app._return_to_main_menu()
+        ev_3 = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_3})
+        self.app.handle_event(ev_3)
+        self.assertEqual(self.app.current_screen, "SCENARIOS")
+
+    def test_gameplay_tab_focus_cycle(self) -> None:
+        self.app._start_classic_game()
+        inputs = [self.app.input_buy, self.app.input_sell, self.app.input_feed, self.app.input_plant]
+        self.assertFalse(any(inp.is_active for inp in inputs))
+
+        # First Tab activates input_buy
+        ev_tab = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_TAB})
+        self.app.handle_event(ev_tab)
+        self.assertTrue(self.app.input_buy.is_active)
+
+    def test_gameplay_reset_hotkey(self) -> None:
+        self.app._start_classic_game()
+        self.app.input_feed.set_value(500)
+        self.assertEqual(self.app.input_feed.value, 500)
+
+        # Press 'R' when no input active resets to default rations
+        ev_r = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_r})
+        self.app.handle_event(ev_r)
+        self.assertEqual(self.app.input_feed.value, 2000)
+
+    def test_modal_escape_and_enter_keys(self) -> None:
+        self.app._open_settings_modal()
+        self.assertIsNotNone(self.app.active_modal)
+
+        # Press Escape closes modal
+        ev_esc = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE})
+        self.app.handle_event(ev_esc)
+        self.assertIsNone(self.app.active_modal)
+
+
+class TestAnnualSummaryAndDeltas(unittest.TestCase):
+    """Verifies that annual transition summaries record deltas accurately."""
+
+    def setUp(self) -> None:
+        pygame.init()
+        SoundSynthesizer.set_enabled(False)
+        self.app = GameApp()
+
+    def test_annual_summary_metrics_recorded_on_turn_advance(self) -> None:
+        self.app._start_classic_game()
+        self.assertIsNone(self.app.last_turn_summary)
+
+        # Enact standard decree
+        self.app.input_buy.set_value(0)
+        self.app.input_sell.set_value(0)
+        self.app.input_feed.set_value(2000)
+        self.app.input_plant.set_value(800)
+        self.app._on_execute_turn()
+
+        self.assertIsNotNone(self.app.last_turn_summary)
+        summary = self.app.last_turn_summary
+        self.assertEqual(summary["year"], 1)
+        self.assertIn("pop_delta", summary)
+        self.assertIn("grain_delta", summary)
+        self.assertIn("acres_delta", summary)
+        self.assertEqual(summary["acres_delta"], 0)
 
 
 if __name__ == "__main__":

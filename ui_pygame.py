@@ -41,10 +41,12 @@ from modern_game_logic import (
     step_enhanced_year,
 )
 from ui_theme import (
+    DecreePreviewData,
     FontManager,
     Palette,
     SoundSynthesizer,
     UIButton,
+    UIDecreePreview,
     UIModal,
     UINumberInput,
     UIToast,
@@ -94,6 +96,8 @@ class GameApp:
         self.enhanced_state: Optional[EnhancedGameState] = None
         self.active_mode = "CLASSIC"  # "CLASSIC" or "ENHANCED"
         self.game_over_result: Optional[dict] = None
+        self.last_turn_summary: Optional[dict] = None
+        self.selected_menu_idx: int = 0
 
         self._is_updating_inputs = False
 
@@ -141,24 +145,31 @@ class GameApp:
         self.btn_game_over_menu = UIButton((px + 400, py + panel_h - 70, 220, 48), "MAIN MENU", self._return_to_main_menu, color_scheme="lapis")
 
     def _init_turn_inputs(self) -> None:
-        """Initializes numeric input widgets for land, feeding, and planting."""
-        panel_y = 470
-        input_w = 360
-        input_h = 105
+        """Initializes numeric input widgets for land, feeding, and planting with live preview."""
+        input_w = 345
+        input_h = 108
+        col1_x = 28
+        col2_x = 390
+        row1_y = 462
+        row2_y = 578
 
-        # Buy Land (x = 30)
-        self.input_buy = UINumberInput((30, panel_y, input_w, input_h), label="BUY LAND (Acres)", on_change=self._on_input_changed)
-        # Sell Land (x = 30, below buy)
-        self.input_sell = UINumberInput((30, panel_y + 115, input_w, input_h), label="SELL LAND (Acres)", on_change=self._on_input_changed)
-        # Feed Citizens (x = 410)
-        self.input_feed = UINumberInput((410, panel_y, input_w, input_h), label="FEED CITIZENS (Bushels)", on_change=self._on_input_changed)
-        # Plant Crops (x = 410, below feed)
-        self.input_plant = UINumberInput((410, panel_y + 115, input_w, input_h), label="PLANT SEED (Acres)", on_change=self._on_input_changed)
+        # Buy Land (Col 1, Row 1)
+        self.input_buy = UINumberInput((col1_x, row1_y, input_w, input_h), label="BUY LAND", unit_label="ACRES", on_change=self._on_input_changed)
+        # Sell Land (Col 1, Row 2)
+        self.input_sell = UINumberInput((col1_x, row2_y, input_w, input_h), label="SELL LAND", unit_label="ACRES", on_change=self._on_input_changed)
+        # Feed Citizens (Col 2, Row 1)
+        self.input_feed = UINumberInput((col2_x, row1_y, input_w, input_h), label="FEED CITIZENS", unit_label="BUSHELS", on_change=self._on_input_changed)
+        # Plant Crops (Col 2, Row 2)
+        self.input_plant = UINumberInput((col2_x, row2_y, input_w, input_h), label="PLANT SEED", unit_label="ACRES", on_change=self._on_input_changed)
 
-        # Action Buttons (Right side: x = 800)
-        self.btn_execute_turn = UIButton((800, panel_y + 115, 230, 56), "ENACT DECREE", self._on_execute_turn, font_size=20, primary=True)
-        self.btn_advisors = UIButton((800, panel_y, 230, 48), "ROYAL ADVISORS", self._open_advisors_modal, font_size=16, color_scheme="lapis")
-        self.btn_chronicle = UIButton((800, panel_y + 56, 230, 48), "CHRONICLE LOG", self._open_chronicle_modal, font_size=16)
+        # Royal Scribe's Decree Preview Ledger (Col 3: x = 752, width = 290, height = 224)
+        self.preview_widget = UIDecreePreview((752, 462, 290, 224))
+
+        # Action Buttons (Col 4: x = 1058, width = 196)
+        self.btn_execute_turn = UIButton((1058, 560, 196, 68), "ENACT DECREE", self._on_execute_turn, font_size=19, primary=True)
+        self.btn_advisors = UIButton((1058, 462, 196, 44), "ROYAL ADVISORS", self._open_advisors_modal, font_size=15, color_scheme="lapis")
+        self.btn_chronicle = UIButton((1058, 511, 196, 44), "CHRONICLE LOG", self._open_chronicle_modal, font_size=15)
+        self.btn_reset_turn = UIButton((1058, 638, 196, 38), "RESET INPUTS", self._reset_turn_inputs_for_new_turn, font_size=14, color_scheme="sand")
 
         # In-Game Header Buttons (Top-Right)
         self.btn_pause = UIButton((1140, 14, 110, 36), "MENU", self._open_pause_modal, font_size=15)
@@ -390,6 +401,9 @@ class GameApp:
 
         # 8. All orders verified valid -> Advance simulation!
         decisions = TurnDecisions(buy_acres=buy, sell_acres=sell, feed_bushels=feed, plant_acres=plant)
+        prior_pop = st.population
+        prior_bushels = st.bushels
+        prior_acres = st.acres
 
         # Advance Simulation
         if self.active_mode == "ENHANCED" and self.enhanced_state:
@@ -399,12 +413,34 @@ class GameApp:
             self.classic_state = step_year(self.classic_state, decisions)
             new_st = self.classic_state
 
-        # Play sound and particle triggers
-        if plant > 0:
+        # Compute summary metrics for annual report card
+        pop_delta = new_st.population - prior_pop
+        grain_delta = new_st.bushels - prior_bushels
+        acres_delta = new_st.acres - prior_acres
+        self.last_turn_summary = {
+            "year": st.year,
+            "starved": new_st.starved_this_year,
+            "immigrants": new_st.immigrants_this_year,
+            "plague": new_st.plague_struck,
+            "yield": new_st.harvest_yield,
+            "harvest_total": plant * new_st.harvest_yield,
+            "rats_ate": new_st.rats_ate,
+            "pop_delta": pop_delta,
+            "grain_delta": grain_delta,
+            "acres_delta": acres_delta,
+        }
+
+        # Sound and particle triggers
+        if new_st.plague_struck:
+            SoundSynthesizer.play("plague")
+        elif new_st.rats_ate > 0:
+            SoundSynthesizer.play("warning")
+            self.world.trigger_rat_particles(30)
+        elif plant > 0:
+            SoundSynthesizer.play("gong")
+            self.world.trigger_harvest_particles(35)
+        else:
             SoundSynthesizer.play("harvest")
-            self.world.trigger_harvest_particles(30)
-        if new_st.rats_ate > 0:
-            self.world.trigger_rat_particles(25)
 
         # Check Game Over
         if new_st.is_over:
@@ -495,13 +531,16 @@ class GameApp:
             return
         advice = get_advisor_advice(st)
         lines = [
-            f"VIZIER: \"{advice.vizier}\"",
+            f"1. THE GRAND VIZIER (Economy & Famine Assessment):",
+            f"   \"{advice.vizier}\"",
             "",
-            f"GRANARY MASTER: \"{advice.granary_master}\"",
+            f"2. THE MASTER OF GRANARIES (Grain Rations & Silo Safety):",
+            f"   \"{advice.granary_master}\"",
+            f"   Recommended Rations: {advice.recommended_feed} bushels (20 bu/citizen)",
             "",
-            f"SURVEYOR: \"{advice.surveyor}\"",
-            "",
-            f"Market Land Rating: {advice.land_price_rating}",
+            f"3. THE ROYAL SURVEYOR (Land Trade & Cultivation):",
+            f"   \"{advice.surveyor}\"",
+            f"   Land Valuation: [{advice.land_price_rating}] at {st.land_price} bu/acre | Recommended Crop: {advice.recommended_plant} acres",
         ]
 
         def apply_advice():
@@ -514,7 +553,7 @@ class GameApp:
             ("APPLY ADVICE", apply_advice),
             ("CLOSE", lambda: setattr(self, "active_modal", None)),
         ]
-        self.active_modal = UIModal("THE ROYAL COUNCIL OF SUMERIA", lines, buttons, width=820, height=480)
+        self.active_modal = UIModal("THE ROYAL COUNCIL OF SUMERIA", lines, buttons, width=840, height=500)
 
     def _open_chronicle_modal(self) -> None:
         if not (self.active_mode == "ENHANCED" and self.enhanced_state):
@@ -658,8 +697,7 @@ class GameApp:
 
         # Screen-specific routing
         if self.current_screen == "MAIN_MENU":
-            for btn in self.menu_buttons:
-                btn.handle_event(event, canvas_mouse)
+            self._handle_menu_events(event, canvas_mouse)
         elif self.current_screen == "GAMEPLAY":
             self._handle_gameplay_events(event, canvas_mouse)
         elif self.current_screen == "GAME_OVER":
@@ -669,6 +707,46 @@ class GameApp:
         elif self.current_screen == "INSTRUCTIONS":
             self._handle_instructions_events(event, canvas_mouse)
 
+    def _handle_menu_events(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> None:
+        if event.type == pygame.KEYDOWN:
+            if event.key in (pygame.K_1, pygame.K_KP1):
+                self._start_classic_game()
+                return
+            elif event.key in (pygame.K_2, pygame.K_KP2):
+                self._start_enhanced_game()
+                return
+            elif event.key in (pygame.K_3, pygame.K_KP3):
+                self._open_scenarios_screen()
+                return
+            elif event.key in (pygame.K_4, pygame.K_KP4):
+                self._open_instructions_screen()
+                return
+            elif event.key in (pygame.K_5, pygame.K_KP5):
+                self._open_settings_modal()
+                return
+            elif event.key in (pygame.K_6, pygame.K_KP6):
+                self.quit()
+                return
+            elif event.key == pygame.K_UP:
+                self.selected_menu_idx = (self.selected_menu_idx - 1) % len(self.menu_buttons)
+                for i, btn in enumerate(self.menu_buttons):
+                    btn.is_focused = (i == self.selected_menu_idx)
+                SoundSynthesizer.play("click")
+                return
+            elif event.key == pygame.K_DOWN:
+                self.selected_menu_idx = (self.selected_menu_idx + 1) % len(self.menu_buttons)
+                for i, btn in enumerate(self.menu_buttons):
+                    btn.is_focused = (i == self.selected_menu_idx)
+                SoundSynthesizer.play("click")
+                return
+            elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
+                if 0 <= self.selected_menu_idx < len(self.menu_buttons):
+                    self.menu_buttons[self.selected_menu_idx].trigger()
+                return
+
+        for btn in self.menu_buttons:
+            btn.handle_event(event, mouse_pos)
+
     def _handle_gameplay_events(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> None:
         # In-Game Header Buttons
         if self.btn_pause.handle_event(event, mouse_pos):
@@ -676,8 +754,10 @@ class GameApp:
         if self.btn_save.handle_event(event, mouse_pos):
             return
 
-        # Execute Turn Button
+        # Execute & Reset Buttons
         if self.btn_execute_turn.handle_event(event, mouse_pos):
+            return
+        if self.btn_reset_turn.handle_event(event, mouse_pos):
             return
 
         # Advisors and Chronicle (Enhanced Mode only)
@@ -712,6 +792,23 @@ class GameApp:
                 if not any_was_active:
                     self._on_execute_turn()
                 return
+            elif not any(inp.is_active for inp in inputs):
+                # Gameplay Hotkeys (when not actively editing numbers)
+                if event.key == pygame.K_a and self.active_mode == "ENHANCED":
+                    self._open_advisors_modal()
+                    return
+                elif event.key == pygame.K_c and self.active_mode == "ENHANCED":
+                    self._open_chronicle_modal()
+                    return
+                elif event.key == pygame.K_s:
+                    self._save_game_action()
+                    return
+                elif event.key == pygame.K_r:
+                    self._reset_turn_inputs_for_new_turn()
+                    return
+                elif event.key in (pygame.K_p, pygame.K_ESCAPE):
+                    self._open_pause_modal()
+                    return
 
         # Forward event to inputs (steppers and typing)
         clicked_any_input = False
@@ -725,12 +822,38 @@ class GameApp:
                 inp.is_active = False
 
     def _handle_game_over_events(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> None:
+        if event.type == pygame.KEYDOWN:
+            if event.key in (pygame.K_1, pygame.K_r, pygame.K_RETURN, pygame.K_SPACE):
+                self._start_classic_game()
+                return
+            elif event.key in (pygame.K_2, pygame.K_m, pygame.K_ESCAPE):
+                self._return_to_main_menu()
+                return
+
         if self.btn_game_over_replay.handle_event(event, mouse_pos):
             return
         if self.btn_game_over_menu.handle_event(event, mouse_pos):
             return
 
     def _handle_scenarios_events(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> None:
+        if event.type == pygame.KEYDOWN:
+            if event.key in (pygame.K_ESCAPE, pygame.K_b):
+                self._return_to_main_menu()
+                return
+            scen_keys = list(SCENARIOS.keys())
+            if event.key in (pygame.K_1, pygame.K_KP1) and len(scen_keys) >= 1:
+                self._start_scenario(scen_keys[0])
+                return
+            elif event.key in (pygame.K_2, pygame.K_KP2) and len(scen_keys) >= 2:
+                self._start_scenario(scen_keys[1])
+                return
+            elif event.key in (pygame.K_3, pygame.K_KP3) and len(scen_keys) >= 3:
+                self._start_scenario(scen_keys[2])
+                return
+            elif event.key in (pygame.K_4, pygame.K_KP4) and len(scen_keys) >= 4:
+                self._start_scenario(scen_keys[3])
+                return
+
         if self.btn_scenarios_back.handle_event(event, mouse_pos):
             return
         for btn in self.scenario_play_buttons.values():
@@ -738,6 +861,19 @@ class GameApp:
                 return
 
     def _handle_instructions_events(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> None:
+        if event.type == pygame.KEYDOWN:
+            if event.key in (pygame.K_ESCAPE, pygame.K_b):
+                self._return_to_main_menu()
+                return
+            elif event.key in (pygame.K_RIGHT, pygame.K_SPACE, pygame.K_RETURN):
+                if self.tutorial_step < 4:
+                    self._next_tutorial_step()
+                return
+            elif event.key == pygame.K_LEFT:
+                if self.tutorial_step > 0:
+                    self._prev_tutorial_step()
+                return
+
         if self.btn_instructions_back.handle_event(event, mouse_pos):
             return
         if self.btn_tutorial_prev.handle_event(event, mouse_pos):
@@ -817,6 +953,11 @@ class GameApp:
         for btn in self.menu_buttons:
             btn.draw(self.canvas)
 
+        # Bottom divider & shortcut help
+        pygame.draw.line(self.canvas, Palette.PANEL_BORDER, (ox + 40, oy + 512), (ox + 500, oy + 512), 1)
+        hint = FontManager.small(12).render("[1-6] Quick Select  |  [↑/↓] Focus  |  [Enter] Confirm", True, Palette.TEXT_MUTED)
+        self.canvas.blit(hint, hint.get_rect(center=(BASE_WIDTH // 2, oy + 532)))
+
     def _draw_gameplay(self) -> None:
         st = self._get_current_game_state()
         if not st:
@@ -853,41 +994,78 @@ class GameApp:
         self.btn_save.draw(self.canvas)
 
         # 3. Annual Report Briefing Card (Upper Floating Card)
-        card_w, card_h = 560, 175
-        card_x, card_y = 30, 80
-        pygame.draw.rect(self.canvas, (28, 22, 18, 220), (card_x, card_y, card_w, card_h), border_radius=8)
+        card_w, card_h = 570, 185
+        card_x, card_y = 28, 76
+        pygame.draw.rect(self.canvas, (28, 22, 18, 225), (card_x, card_y, card_w, card_h), border_radius=8)
         pygame.draw.rect(self.canvas, Palette.PANEL_BORDER, (card_x, card_y, card_w, card_h), width=2, border_radius=8)
 
         # Header in briefing
-        rep_hdr = FontManager.header(18).render(f"HAMURABI: REPORT FOR YEAR {st.year}", True, Palette.GOLD_PALE)
-        self.canvas.blit(rep_hdr, (card_x + 16, card_y + 12))
+        rep_hdr = FontManager.header(17).render(f"HAMURABI: REPORT FOR YEAR {st.year}", True, Palette.GOLD_PALE)
+        self.canvas.blit(rep_hdr, (card_x + 16, card_y + 10))
+
+        # Event Badges on Top Right of Briefing Card
+        badge_tags = []
+        if st.plague_struck:
+            badge_tags.append(("PLAGUE", Palette.CRIMSON))
+        if st.rats_ate > 0:
+            badge_tags.append((f"RATS -{st.rats_ate}bu", Palette.AMBER_WARN))
+        if st.harvest_yield == 5:
+            badge_tags.append(("BUMPER HARVEST", Palette.SUCCESS_GREEN))
+        elif st.harvest_yield == 1:
+            badge_tags.append(("DROUGHT", (180, 80, 30)))
+
+        tag_x = card_x + card_w - 12
+        for t_text, t_col in reversed(badge_tags):
+            t_surf = FontManager.mono(11).render(t_text, True, Palette.TEXT_TITLE)
+            tw = t_surf.get_width() + 14
+            th = 20
+            tag_x -= tw
+            tag_rect = pygame.Rect(tag_x, card_y + 9, tw, th)
+            pygame.draw.rect(self.canvas, t_col, tag_rect, border_radius=4)
+            self.canvas.blit(t_surf, t_surf.get_rect(center=tag_rect.center))
+            tag_x -= 6
 
         # Report lines
-        lines = [
-            f"- Starved this year: {st.starved_this_year} citizens | Newcomers: {st.immigrants_this_year} arrived",
-            f"- Harvest yield: {st.harvest_yield} bushels/acre across cultivated land",
-            f"- Rat infestation: {st.rats_ate} bushels destroyed in silos",
-            f"- Current grain in store: {st.bushels} bushels",
-            f"- Land is trading at {st.land_price} bushels per acre",
-        ]
+        lines = []
         if st.plague_struck:
-            lines.insert(1, "WARNING: A HORRIBLE PLAGUE STRUCK! Half the people died.")
+            lines.append(("• HORRIBLE PLAGUE STRUCK! Half the living people died.", Palette.CRIMSON_LIGHT))
 
-        curr_y = card_y + 38
-        for line in lines:
-            col = Palette.CRIMSON_LIGHT if "PLAGUE" in line or "Starved" in line and st.starved_this_year > 0 else Palette.TEXT_BODY
-            l_surf = FontManager.small(14).render(line, True, col)
+        if st.starved_this_year > 0:
+            lines.append((f"• FAMINE: {st.starved_this_year} citizens starved to death.", Palette.CRIMSON_LIGHT))
+        else:
+            lines.append((f"• Sustenance: 0 citizens starved. All people fed.", Palette.SUCCESS_GREEN))
+
+        lines.append((f"• Newcomers: {st.immigrants_this_year} arrived. Population now {st.population}.", Palette.TEXT_BODY))
+        lines.append((f"• Harvest: Reaped {st.harvest_yield} bu/acre across sown acreage.", Palette.TEXT_BODY))
+        lines.append((f"• Silos: {st.rats_ate} bu eaten by rats. Store now {st.bushels} bushels.", Palette.TEXT_BODY))
+        lines.append((f"• Land Market: Trading at {st.land_price} bushels per acre.", Palette.TEXT_MUTED))
+
+        curr_y = card_y + 34
+        for text, col in lines[:5]:
+            l_surf = FontManager.small(13).render(text, True, col)
             self.canvas.blit(l_surf, (card_x + 16, curr_y))
-            curr_y += 24
+            curr_y += 21
+
+        # Summary delta footer if previous turn recorded
+        if self.last_turn_summary:
+            p_yr = self.last_turn_summary["year"]
+            p_pop = self.last_turn_summary["pop_delta"]
+            p_grain = self.last_turn_summary["grain_delta"]
+            delta_str = f"Net from YR {p_yr}: Pop {p_pop:+} | Grain {p_grain:+} bu | Rats -{self.last_turn_summary['rats_ate']} bu"
+            delta_surf = FontManager.small(11).render(delta_str, True, Palette.GOLD_LIGHT)
+            self.canvas.blit(delta_surf, (card_x + 16, card_y + card_h - 22))
 
         # 4. Interactive Turn Decision Panel (Bottom half: y = 428 to 710)
         panel_rect = pygame.Rect(16, 428, 1248, 282)
         pygame.draw.rect(self.canvas, (32, 26, 20, 235), panel_rect, border_radius=10)
         pygame.draw.rect(self.canvas, Palette.PANEL_BORDER_LIGHT, panel_rect, width=2, border_radius=10)
 
-        # Title of Decision Panel
-        dec_title = FontManager.header(18).render("ROYAL DECREES & RESOURCE ALLOCATION", True, Palette.GOLD_PALE)
-        self.canvas.blit(dec_title, (30, 438))
+        # Title of Decision Panel & Shortcut hints
+        dec_title = FontManager.header(17).render("ROYAL DECREES & RESOURCE ALLOCATION", True, Palette.GOLD_PALE)
+        self.canvas.blit(dec_title, (28, 436))
+
+        hint_text = FontManager.small(12).render("[Tab] Focus  |  [Enter] Enact Decree  |  [R] Reset Inputs  |  [Esc] Menu", True, Palette.TEXT_MUTED)
+        self.canvas.blit(hint_text, (self.canvas.get_width() - hint_text.get_width() - 36, 438))
 
         # Render Number Inputs
         self.input_buy.draw(self.canvas)
@@ -895,11 +1073,33 @@ class GameApp:
         self.input_feed.draw(self.canvas)
         self.input_plant.draw(self.canvas)
 
+        # Render Royal Scribe's Decree Preview Ledger
+        preview = DecreePreviewData(st, self.input_buy.value, self.input_sell.value, self.input_feed.value, self.input_plant.value)
+        self.preview_widget.draw(self.canvas, preview)
+
         # Action Buttons
-        self.btn_execute_turn.draw(self.canvas)
         if self.active_mode == "ENHANCED":
+            self.btn_execute_turn.rect = pygame.Rect(1058, 560, 196, 68)
+            self.btn_advisors.rect = pygame.Rect(1058, 462, 196, 44)
+            self.btn_chronicle.rect = pygame.Rect(1058, 511, 196, 44)
+            self.btn_reset_turn.rect = pygame.Rect(1058, 638, 196, 38)
             self.btn_advisors.draw(self.canvas)
             self.btn_chronicle.draw(self.canvas)
+            self.btn_execute_turn.draw(self.canvas)
+            self.btn_reset_turn.draw(self.canvas)
+        else:
+            self.btn_execute_turn.rect = pygame.Rect(1058, 462, 196, 68)
+            self.btn_reset_turn.rect = pygame.Rect(1058, 538, 196, 40)
+            self.btn_execute_turn.draw(self.canvas)
+            self.btn_reset_turn.draw(self.canvas)
+
+            badge_box = pygame.Rect(1058, 588, 196, 96)
+            pygame.draw.rect(self.canvas, (24, 18, 14), badge_box, border_radius=6)
+            pygame.draw.rect(self.canvas, Palette.PANEL_BORDER, badge_box, width=1, border_radius=6)
+            self.canvas.blit(FontManager.header(13).render("CLASSIC 1978 RULES", True, Palette.GOLD_LIGHT), (1068, 598))
+            self.canvas.blit(FontManager.small(11).render("• Microsoft BASIC engine", True, Palette.TEXT_MUTED), (1068, 622))
+            self.canvas.blit(FontManager.small(11).render("• D < 10*P strict labor limit", True, Palette.TEXT_MUTED), (1068, 642))
+            self.canvas.blit(FontManager.small(11).render("• Advisors inactive in Classic", True, Palette.TEXT_MUTED), (1068, 662))
 
     def _draw_game_over(self) -> None:
         self.world.render(self.canvas)
@@ -966,6 +1166,10 @@ class GameApp:
         self.btn_game_over_replay.draw(self.canvas)
         self.btn_game_over_menu.draw(self.canvas)
 
+        # Keyboard shortcut hints
+        go_hint = FontManager.small(12).render("[1 / R] Play Again  |  [2 / M / Esc] Main Menu", True, Palette.TEXT_MUTED)
+        self.canvas.blit(go_hint, go_hint.get_rect(center=(BASE_WIDTH // 2, py + panel_h - 14)))
+
     def _draw_scenarios(self) -> None:
         self.world.render(self.canvas)
 
@@ -993,42 +1197,59 @@ class GameApp:
             sub_s = FontManager.small(13).render(scen.subtitle, True, Palette.SAND_LIGHT)
             self.canvas.blit(title_s, (cx + 14, card_y + 16))
             self.canvas.blit(sub_s, (cx + 14, card_y + 42))
+
+            # Difficulty Badge
+            diff_map = {
+                "drought": ("HARD", Palette.AMBER_WARN),
+                "boom": ("MEDIUM", Palette.LAPIS_LIGHT),
+                "defense": ("HARD", Palette.AMBER_WARN),
+                "empire": ("MASTER", Palette.CRIMSON),
+            }
+            d_text, d_col = diff_map.get(key, ("CHALLENGE", Palette.GOLD_BASE))
+            d_badge = pygame.Rect(cx + card_w - 76, card_y + 16, 62, 22)
+            pygame.draw.rect(self.canvas, d_col, d_badge, border_radius=4)
+            d_label = FontManager.mono(11).render(d_text, True, Palette.TEXT_TITLE)
+            self.canvas.blit(d_label, d_label.get_rect(center=d_badge.center))
+
             pygame.draw.line(self.canvas, Palette.GOLD_BASE, (cx + 14, card_y + 64), (cx + card_w - 14, card_y + 64), 1)
 
-            # Description (word wrapped manually)
+            # Description (word wrapped cleanly)
             words = scen.description.split()
             desc_lines = []
             cur_line = []
+            font_desc = FontManager.small(13)
             for w in words:
-                cur_line.append(w)
-                if len(" ".join(cur_line)) > 26:
-                    desc_lines.append(" ".join(cur_line[:-1]))
+                test_str = " ".join(cur_line + [w])
+                if font_desc.size(test_str)[0] > (card_w - 28) and cur_line:
+                    desc_lines.append(" ".join(cur_line))
                     cur_line = [w]
+                else:
+                    cur_line.append(w)
             if cur_line:
                 desc_lines.append(" ".join(cur_line))
 
-            dy = card_y + 76
+            dy = card_y + 74
             for dl in desc_lines[:6]:
-                d_surf = FontManager.small(13).render(dl, True, Palette.TEXT_BODY)
+                d_surf = font_desc.render(dl, True, Palette.TEXT_BODY)
                 self.canvas.blit(d_surf, (cx + 14, dy))
                 dy += 20
 
             # Objectives list
-            obj_y = card_y + 220
-            pygame.draw.rect(self.canvas, (24, 18, 14), (cx + 12, obj_y, card_w - 24, 180), border_radius=6)
+            obj_y = card_y + 215
+            pygame.draw.rect(self.canvas, (24, 18, 14), (cx + 12, obj_y, card_w - 24, 185), border_radius=6)
             self.canvas.blit(FontManager.header(15).render("VICTORY GOALS:", True, Palette.GOLD_LIGHT), (cx + 20, obj_y + 10))
 
             goals = [
-                f"- Term: Survive {scen.target_year} Years",
-                f"- Start Grain: {scen.starting_bushels} bu",
-                f"- Starvation Limit: <{scen.max_avg_starvation_pct:.0f}%",
+                f"✓ Term: Survive {scen.target_year} Years",
+                f"✓ Start Grain: {scen.starting_bushels} bu",
+                f"✓ Starvation Limit: <{scen.max_avg_starvation_pct:.0f}%",
             ]
             if scen.min_final_bushels > 0:
-                goals.append(f"- Final Grain: >={scen.min_final_bushels} bu")
+                goals.append(f"✓ Final Grain: >={scen.min_final_bushels} bu")
             if scen.min_final_acres > 0:
-                goals.append(f"- Final Land: >={scen.min_final_acres} ac")
+                goals.append(f"✓ Final Land: >={scen.min_final_acres} ac")
             if scen.min_final_population > 0:
-                goals.append(f"- Final Pop: >={scen.min_final_population}")
+                goals.append(f"✓ Final Pop: >={scen.min_final_population}")
 
             gy = obj_y + 36
             for g in goals:
@@ -1118,7 +1339,21 @@ class GameApp:
 
         card_title, card_lines = tutorial_cards[self.tutorial_step]
 
-        # Step indicator
+        # Step progress indicator pills
+        for s in range(5):
+            dot_x = px + 360 + s * 32
+            dot_rect = pygame.Rect(dot_x, py + 26, 22, 20)
+            if s == self.tutorial_step:
+                pygame.draw.rect(self.canvas, Palette.GOLD_LIGHT, dot_rect, border_radius=4)
+                d_col = Palette.TEXT_DARK
+            else:
+                pygame.draw.rect(self.canvas, (45, 36, 28), dot_rect, border_radius=4)
+                pygame.draw.rect(self.canvas, Palette.PANEL_BORDER, dot_rect, width=1, border_radius=4)
+                d_col = Palette.TEXT_MUTED
+            num_surf = FontManager.mono(11).render(str(s + 1), True, d_col)
+            self.canvas.blit(num_surf, num_surf.get_rect(center=dot_rect.center))
+
+        # Step indicator text
         step_str = f"STEP {self.tutorial_step + 1} OF 5"
         self.canvas.blit(FontManager.header(16).render(step_str, True, Palette.GOLD_LIGHT), (px + panel_w - 160, py + 26))
 
@@ -1138,6 +1373,10 @@ class GameApp:
         self.btn_tutorial_next.is_enabled = (self.tutorial_step < 4)
         self.btn_tutorial_prev.draw(self.canvas)
         self.btn_tutorial_next.draw(self.canvas)
+
+        # Bottom navigation hint
+        nav_hint = FontManager.small(12).render("[← / →] Navigate Steps  |  [Esc] Menu", True, Palette.TEXT_MUTED)
+        self.canvas.blit(nav_hint, (px + 60, py + panel_h - 52))
 
     # -----------------------------------------------------------------------
     # Main Game Loop

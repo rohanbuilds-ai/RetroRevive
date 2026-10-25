@@ -52,7 +52,7 @@ python main.py --no-animate
 ### Run the Automated Test Suite
 ```bash
 python -m unittest discover -v
-# Runs all 50 tests across test_game.py, test_modern.py, and test_ui.py
+# Runs all 60 tests across test_game.py, test_modern.py, and test_ui.py
 ```
 
 ### Run Automated Headless Visual UI Verification
@@ -92,12 +92,16 @@ RetroRevive cleanly separates historical fidelity from modern convenience:
 ## 3. Visual UI & Audio Showcase
 
 RetroRevive's desktop interface is built with procedural pixel rendering and sound synthesis:
+- **Royal Scribe's Decree Preview Ledger (`ui_theme.py`):**
+  - Live, deterministic consequence preview calculating projected land total, remaining grain reserves, fed vs. starving citizens, and workforce planting limits before submitting a decree.
+  - Strictly RNG-free; future events (1–5 bu/ac harvest yield, 40% rat loss) are explicitly labeled as uncertain rather than falsely forecasted.
+  - Real-time warnings if proposed rations risk catastrophic famine (>45% starvation impeachment).
 - **Procedural Sumerian World (`ui_world.py`):**
-  - Atmospheric desert sky with moving clouds and a pulsing celestial sun.
-  - Stepped Ziggurat of Ur with animated flame braziers.
-  - Sine-wave flowing Euphrates river with shimmering water highlights.
+  - Atmospheric desert sky with living day/evening transitions across reign years, moving clouds, and celestial sun.
+  - Stepped Ziggurat of Ur with flame braziers emitting smoke particles.
+  - Multi-layered flowing Euphrates river with undulating wave highlights.
   - Mudbrick granary silos with real-time grain fill level gauges.
-  - Animated citizen villagers walking along the riverfront.
+  - Animated citizen villagers walking along riverbank pathways and flying bird flocks.
   - Dynamic particle emitters for harvest chaff, scampering granary rats, and victory fireworks.
 - **Procedural 8-Bit Audio Synthesis (`ui_theme.py`):**
   - Generates authentic 16-bit mono PCM waveforms in memory via standard `math.sin` and `struct`.
@@ -107,6 +111,12 @@ RetroRevive's desktop interface is built with procedural pixel rendering and sou
   - Designed on an internal $1280 \times 720$ logical canvas with aspect-ratio letterboxing.
   - Automatically scales cleanly to $1366 \times 768$, $1920 \times 1080$, $4\text{K}$, or arbitrary window sizes.
   - Intuitive input widgets provide direct typing, quick-adjust steppers (`-100`, `-10`, `+10`, `+100`), `MAX`, and `CLR` buttons.
+- **Full Keyboard Navigability & Accessibility:**
+  - `Tab`: Cycle active input focus across allocation fields.
+  - `Enter`: Commit typed values or enact decree when ready.
+  - `1`–`6`: Quick-select main menu options and scenario challenge cards.
+  - `A`: Royal Advisors (Enhanced Mode) | `C`: Chronicle Log | `R`: Reset turn inputs | `S`: Quick save | `Esc`: Pause / Back.
+  - Reduced-motion toggle in settings for players preferring static backgrounds.
 
 ### Verified Screenshot Gallery
 Generated programmatically via [`verify_ui.py`](file:///e:/GitHub%20Projects/RetroRevive/verify_ui.py) in [`docs/screenshots/`](file:///e:/GitHub%20Projects/RetroRevive/docs/screenshots):
@@ -148,13 +158,13 @@ RetroRevive/
 
 ## 5. Automated Verification & Quality Assurance
 
-The automated test suite contains **50 tests** passing with 0 errors and 0 failures:
+The automated test suite contains **60 tests** passing with 0 errors and 0 failures:
 
 | Test Module | Test Count | Scope Verified |
 |---|---|---|
 | `test_game.py` | 26 tests | Initial state, land pricing, buy/sell/feed/plant validations, harvest yield, rat parity math, immigration formula, plague 50% halving, underfeeding, 45% annual impeachment, overfeeding statistical quirk, all 4 evaluation tiers, full 10-year deterministic simulation, safe input recovery, and terminal presentation routines. |
 | `test_modern.py` | 7 tests | Contextual advisor calculations, market price ratings, chronicle log persistence across years, scenario definitions, scenario victory/defeat conditions, JSON save and load roundtrip, corrupt save recovery, and nonexistent file handling. |
-| `test_ui.py` | 17 tests | UI widgets, steppers, buttons, modal dialogs, audio synthesizer waveform generation, world renderer tick updates, particle emitters, screen state routing, input re-entrancy, and letterbox coordinate transformations. |
+| `test_ui.py` | 27 tests | UI widgets, steppers, buttons, modal dialogs, audio synthesizer waveform generation, world renderer tick updates, particle emitters, screen state routing, input re-entrancy, letterbox coordinate transformations, live Decree Preview calculations, famine impeachment warnings, tab focus cycling, and hotkey navigation. |
 
 Run tests:
 ```bash
@@ -190,3 +200,47 @@ python main.py --animate --speed fast --seed 42 --no-sound
 - **Doug Dyment:** Original author of *The Sumer Game* (FOCAL, 1968) on the DEC PDP-8 at Digital Equipment Corporation.
 - **David H. Ahl:** Author of *101 BASIC Computer Games* (1973) and *BASIC Computer Games: Microcomputer Edition* (1978), who adapted the game to Microsoft BASIC and created the celebrated 10-year performance evaluation system.
 - **Digital Preservation Archives:** Special recognition to Tristano Ajmone (*The Hamurabi Collection*) and AtariArchives.org for maintaining verified historical source listings.
+
+---
+
+## 8. Reproducible Demonstration Sequence for Buildathon Judges
+
+To demonstrate RetroRevive effectively during judging:
+
+### Step 1: Launch & Atmospheric Showcase
+```bash
+python ui_pygame.py
+```
+- Observe the living procedural Sumerian kingdom: drifting clouds, celestial sun, flying birds, flowing Euphrates river, date palms, and stepped Ziggurat with flickering flame braziers.
+- Use keyboard numbers `[1]`–`[6]` or mouse to inspect menus and settings.
+
+### Step 2: Classic 1978 Mode & Royal Scribe's Decree Preview
+- Select **Play Classic Mode (1978)**.
+- Note the initial historical state: $100$ citizens, $1,000$ acres, $2,800$ bushels in store.
+- Adjust the **Feed Citizens** stepper or type values.
+- Observe the **Royal Scribe's Ledger** on the right updating live:
+  - Feeding $2,000$ bu reports `100/100 citizens fed (Optimal)`.
+  - Underfeeding to $800$ bu immediately triggers `DANGER: 60% starved! FINK IMPEACHMENT!`.
+  - Notice future events (*Harvest 1–5 bu/ac* and *Rats devouring*) are explicitly marked as *Uncertain*.
+- Click **Enact Decree** or press `[Enter]` to advance to Year 2. Observe the annual delta report and particle effects.
+
+### Step 3: Safe Input Handling & Historical Steward Dismissal
+- In Year 2, type `-5` into **Buy Land** and press `[Enter]`.
+- Observe the faithful historical outcome: The game does not crash; instead, Hammurabi displays:
+  `"I CANNOT DO WHAT YOU WISH. GET YOURSELF ANOTHER STEWARD!!!!!"`
+  and safely transitions to the evaluation screen with a **Play Again** button.
+
+### Step 4: Enhanced Mode & Royal Council Advisors
+- Return to Menu and launch **Play Enhanced Mode**.
+- Click **Royal Advisors** or press `[A]`:
+  - Review structured counsel from the **Grand Vizier**, **Granary Master**, and **Royal Surveyor**.
+  - Click **Apply Advice** to automatically populate safe, mathematically optimal turn decrees.
+- Click **Chronicle Log** or press `[C]` to inspect the historical log of prior year decisions.
+
+### Step 5: Automated Verification & Headless Validation
+Open a terminal and run the test suite:
+```bash
+python -m unittest discover -v
+```
+- Confirm **60 tests pass** in $< 1.0$s with 0 failures and 0 errors.
+- Run `python verify_ui.py` to demonstrate programmatic screenshot capture across $1280 \times 720$, $1366 \times 768$, and $1920 \times 1080$.
