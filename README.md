@@ -52,7 +52,7 @@ python main.py --no-animate
 ### Run the Automated Test Suite
 ```bash
 python -m unittest discover -v
-# Runs all 33 tests across test_game.py and test_modern.py
+# Runs all 50 tests across test_game.py, test_modern.py, and test_ui.py
 ```
 
 ### Run Automated Headless Visual UI Verification
