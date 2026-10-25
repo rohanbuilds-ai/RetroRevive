@@ -111,24 +111,32 @@ CATALOG: Dict[str, GameMetadata] = {
         game_id="lunar_lander",
         title="LUNAR LANDER",
         subtitle="Apollo 11 Lunar Module Descent Simulator",
-        year=1973,
-        author="Jim Storer (1969), David H. Ahl (1973)",
+        year=1978,
+        author="Jim Storer (1969), David H. Ahl (1973/1978)",
         original_publisher="DEC / Creative Computing",
-        category=GameCategory.STRATEGY_SIMULATION,
-        category_display="Strategy & Simulation",
-        status=GameStatus.COMING_SOON,
-        modes=["Standard Physics (1973)", "Enhanced Radar HUD"],
+        category=GameCategory.ADVENTURE_SPACE,
+        category_display="Adventure & Space",
+        status=GameStatus.PLAYABLE,
+        modes=["Classic 1978 Mode (Jim Storer Model)", "Enhanced Flight Telemetry HUD"],
         description=(
-            "Pilot the Apollo lunar excursion module safely to the moon's surface. Manage your "
-            "fuel burn rate against lunar gravity to touch down at under 5 ft/sec."
+            "Pilot the Apollo lunar excursion module (LEM) safely down to the moon's surface. "
+            "Manage your retro-rocket fuel burn rate (0-200 lbs/sec) against lunar gravity "
+            "over 10-second cycles to touch down smoothly on Tranquility Base."
         ),
         rules_summary=(
-            "Burn fuel every second to counteract gravity. Soft landing achieved below 5 mph. "
-            "High descent rates result in impact and crater creation."
+            "Starts at 120 miles altitude falling at 3,600 MPH (1.0 mi/s) with 16,500 lbs of fuel. "
+            "Set burn rate K (0-200 lbs/sec) every 10 seconds. Lunar gravity accelerates at 0.001 mi/s². "
+            "Touchdown velocity <= 1.2 MPH: Perfect Landing. <= 10 MPH: Good Landing. 10-60 MPH: Craft Damaged. "
+            "> 60 MPH: Fatal Crash, creates a crater."
         ),
-        historical_provenance="Created in 1969 by Lexington High School student Jim Storer; published in 101 BASIC Computer Games (1973).",
-        book_source="BASIC Computer Games (1978), pp. 106-108.",
-        tags=["Space", "Physics", "Apollo", "Coming Soon"],
+        historical_provenance=(
+            "Created in autumn 1969 by 17-year-old Lexington High School student Jim Storer in FOCAL. "
+            "Ported to DEC BASIC by David H. Ahl and published in 101 BASIC Computer Games (1973) "
+            "and BASIC Computer Games: Microcomputer Edition (1978, pp. 106-108). Features exact Taylor series "
+            "numerical integration of Tsiolkovsky's rocket equation."
+        ),
+        book_source="BASIC Computer Games: Microcomputer Edition (1978), pp. 106-108.",
+        tags=["Space", "Physics", "Apollo", "Simulation", "NASA", "Retro-Rocket"],
     ),
     "super_star_trek": GameMetadata(
         game_id="super_star_trek",

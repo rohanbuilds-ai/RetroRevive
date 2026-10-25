@@ -16,6 +16,7 @@ checkpoint_ui_pre_fix/
 checkpoint_final_quality_upgrade/
 checkpoint_release_audit/
 checkpoint_platform/
+checkpoint_milestone_2_lander/
 *.bak
 
 # Game runtime save data

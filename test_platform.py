@@ -8,7 +8,7 @@ import unittest
 import pygame
 
 from game_registry import CATALOG, GameCategory, GameMetadata, GameRegistry, GameStatus
-from games import matches_app, matches_engine
+from games import lander_app, lander_engine, matches_app, matches_engine
 from retrorevive import RetroReviveHub
 from ui_pygame import GameApp
 from ui_theme import SoundSynthesizer
@@ -32,15 +32,20 @@ class TestGameRegistry(unittest.TestCase):
 
     def test_playable_filter(self) -> None:
         playable = self.registry.list_playable()
-        self.assertEqual(len(playable), 2)
+        self.assertEqual(len(playable), 3)
         p_ids = [g.game_id for g in playable]
         self.assertIn("hammurabi", p_ids)
         self.assertIn("23_matches", p_ids)
+        self.assertIn("lunar_lander", p_ids)
 
     def test_category_filtering(self) -> None:
         strategy = self.registry.filter_by_category(GameCategory.STRATEGY_SIMULATION)
         self.assertTrue(all(g.category == GameCategory.STRATEGY_SIMULATION for g in strategy))
         self.assertIn("hammurabi", [g.game_id for g in strategy])
+
+        space = self.registry.filter_by_category(GameCategory.ADVENTURE_SPACE)
+        self.assertEqual(len(space), 2)
+        self.assertIn("lunar_lander", [g.game_id for g in space])
 
         puzzle = self.registry.filter_by_category(GameCategory.PUZZLE_LOGIC)
         self.assertEqual(len(puzzle), 1)
@@ -55,12 +60,24 @@ class TestGameRegistry(unittest.TestCase):
         self.assertEqual(len(ham_results), 1)
         self.assertEqual(ham_results[0].game_id, "hammurabi")
 
+        lander_results = self.registry.search("lander")
+        self.assertEqual(len(lander_results), 1)
+        self.assertEqual(lander_results[0].game_id, "lunar_lander")
+
         # Search by tag
+        apollo_results = self.registry.search("Apollo")
+        self.assertEqual(len(apollo_results), 1)
+        self.assertEqual(apollo_results[0].game_id, "lunar_lander")
+
         nim_results = self.registry.search("nim")
         self.assertEqual(len(nim_results), 1)
         self.assertEqual(nim_results[0].game_id, "23_matches")
 
         # Search by author
+        storer_results = self.registry.search("Storer")
+        self.assertEqual(len(storer_results), 1)
+        self.assertEqual(storer_results[0].game_id, "lunar_lander")
+
         albrecht_results = self.registry.search("Albrecht")
         self.assertEqual(len(albrecht_results), 1)
         self.assertEqual(albrecht_results[0].game_id, "23_matches")
@@ -107,6 +124,13 @@ class TestRetroReviveHubNavigation(unittest.TestCase):
         self.assertTrue(self.hub.cards[0].is_selected)
 
     def test_category_tab_filtering(self) -> None:
+        # Filter by Space
+        self.hub._set_category(GameCategory.ADVENTURE_SPACE)
+        self.assertEqual(len(self.hub.cards), 2)
+        card_ids = [c.meta.game_id for c in self.hub.cards]
+        self.assertIn("lunar_lander", card_ids)
+        self.assertIn("super_star_trek", card_ids)
+
         # Filter by Puzzle
         self.hub._set_category(GameCategory.PUZZLE_LOGIC)
         self.assertEqual(len(self.hub.cards), 1)
@@ -168,6 +192,15 @@ class TestGameLaunchAndReturn(unittest.TestCase):
         self.hub.active_subapp._on_back_clicked()
         self.assertIsNone(self.hub.active_subapp)
 
+    def test_launch_lunar_lander_and_return(self) -> None:
+        self.hub.launch_game("lunar_lander")
+        self.assertIsNotNone(self.hub.active_subapp)
+        self.assertIsInstance(self.hub.active_subapp, lander_app.LanderApp)
+
+        # Subapp back button returns to hub
+        self.hub.active_subapp._on_back_clicked()
+        self.assertIsNone(self.hub.active_subapp)
+
     def test_numeric_hotkeys_quick_launch(self) -> None:
         # Key '1' launches Hammurabi
         ev_1 = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_1})
@@ -181,6 +214,14 @@ class TestGameLaunchAndReturn(unittest.TestCase):
         ev_2 = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_2})
         self.hub.handle_event(ev_2)
         self.assertIsInstance(self.hub.active_subapp, matches_app.MatchesApp)
+
+        self.hub._return_to_hub()
+        self.assertIsNone(self.hub.active_subapp)
+
+        # Key '3' launches Lunar Lander
+        ev_3 = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_3})
+        self.hub.handle_event(ev_3)
+        self.assertIsInstance(self.hub.active_subapp, lander_app.LanderApp)
 
         self.hub._return_to_hub()
         self.assertIsNone(self.hub.active_subapp)
@@ -226,6 +267,80 @@ class TestMatchesAppUI(unittest.TestCase):
         self.app._restart_game()
         self.assertEqual(self.app.state.matches_remaining, 23)
         self.assertFalse(self.app.state.game_over)
+
+
+class TestLanderAppUI(unittest.TestCase):
+    """Verifies Lunar Lander graphical UI interactions, telemetry, presets, and modals."""
+
+    def setUp(self) -> None:
+        pygame.init()
+        SoundSynthesizer.set_enabled(False)
+        self.app = lander_app.LanderApp()
+
+    def test_initial_app_state(self) -> None:
+        self.assertEqual(self.app.state.time_elapsed, 0.0)
+        self.assertEqual(self.app.state.altitude, 120.0)
+        self.assertEqual(self.app.state.velocity, 1.0)
+        self.assertEqual(self.app.state.fuel_remaining, 16500.0)
+        self.assertIsNone(self.app.state.outcome)
+        self.assertFalse(self.app.state.is_terminal)
+        self.assertFalse(self.app.show_rules_modal)
+        self.assertEqual(self.app.current_burn_input, 0.0)
+
+    def test_preset_burn_buttons(self) -> None:
+        self.app._set_burn(50.0)
+        self.assertEqual(self.app.current_burn_input, 50.0)
+
+        self.app._set_burn(200.0)
+        self.assertEqual(self.app.current_burn_input, 200.0)
+
+        # Clamping
+        self.app._set_burn(350.0)
+        self.assertEqual(self.app.current_burn_input, 200.0)
+
+        self.app._set_burn(-10.0)
+        self.assertEqual(self.app.current_burn_input, 0.0)
+
+    def test_burn_adjustments(self) -> None:
+        self.app._set_burn(100.0)
+        self.app._adjust_burn(25.0)
+        self.assertEqual(self.app.current_burn_input, 125.0)
+
+        self.app._adjust_burn(-10.0)
+        self.assertEqual(self.app.current_burn_input, 115.0)
+
+    def test_auto_hover_calculation(self) -> None:
+        self.app._set_hover_burn()
+        # Hover burn = (33000 * 0.001) / 1.8 = 18.333 lbs/sec
+        self.assertAlmostEqual(self.app.current_burn_input, 18.3, places=1)
+
+    def test_burn_execution_and_telemetry_advance(self) -> None:
+        self.app._set_burn(100.0)
+        self.app._execute_burn()
+
+        # After 10s burn of 100 lbs/sec, fuel is 15,500 lbs
+        self.assertEqual(self.app.state.time_elapsed, 10.0)
+        self.assertEqual(self.app.state.fuel_remaining, 15500.0)
+        self.assertLess(self.app.state.altitude, 120.0)
+        self.assertTrue(self.app.is_thrusting)
+
+    def test_rules_modal_toggle(self) -> None:
+        self.assertFalse(self.app.show_rules_modal)
+        self.app._toggle_rules()
+        self.assertTrue(self.app.show_rules_modal)
+        self.app._toggle_rules()
+        self.assertFalse(self.app.show_rules_modal)
+
+    def test_restart_flight(self) -> None:
+        self.app._set_burn(100.0)
+        self.app._execute_burn()
+        self.assertEqual(self.app.state.time_elapsed, 10.0)
+
+        self.app._restart_flight()
+        self.assertEqual(self.app.state.time_elapsed, 0.0)
+        self.assertEqual(self.app.state.altitude, 120.0)
+        self.assertEqual(self.app.state.fuel_remaining, 16500.0)
+        self.assertEqual(self.app.current_burn_input, 0.0)
 
 
 if __name__ == "__main__":

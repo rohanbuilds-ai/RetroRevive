@@ -328,6 +328,11 @@ def main() -> None:
         help="Launch 23 Matches directly",
     )
     parser.add_argument(
+        "--lander",
+        action="store_true",
+        help="Launch Lunar Lander directly",
+    )
+    parser.add_argument(
         "--fullscreen",
         action="store_true",
         help="Launch desktop interface in fullscreen mode",
@@ -395,6 +400,11 @@ def main() -> None:
                 app = matches_app.MatchesApp(start_fullscreen=args.fullscreen)
                 app.run()
                 return
+            elif args.lander:
+                from games import lander_app
+                app = lander_app.LanderApp(start_fullscreen=args.fullscreen)
+                app.run()
+                return
             elif args.hammurabi:
                 from ui_pygame import GameApp
                 app = GameApp(start_fullscreen=args.fullscreen)
@@ -414,6 +424,10 @@ def main() -> None:
     if args.matches:
         from games import matches_engine
         matches_engine.play_cli()
+        return
+    if args.lander:
+        from games import lander_engine
+        lander_engine.play_cli()
         return
 
     # Standard Hammurabi Terminal CLI

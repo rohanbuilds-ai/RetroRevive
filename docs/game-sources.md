@@ -73,21 +73,40 @@ To respect historical attribution and software licensing:
 
 ---
 
+### 2.3. Lunar Lander (Apollo 11 LEM Descent Simulator)
+
+| Attribute | Verified Historical Record |
+| :--- | :--- |
+| **Original Creator** | Jim Storer (Lexington High School, Lexington, MA, Autumn 1969) |
+| **Original Platform** | DEC PDP-8 in FOCAL-69 (Lunar Landing Game) |
+| **Book Publication** | *101 BASIC Computer Games* (Digital Equipment Corporation, 1973, ed. David H. Ahl) |
+| **Microcomputer Publication** | *BASIC Computer Games: Microcomputer Edition*, ed. David H. Ahl, Creative Computing Press, 1978, pp. 106–108 |
+| **Target Verified Edition** | **1978 Microsoft / Creative Computing BASIC edition** |
+| **Program File Name in Archives** | `lunar.bas` / `rocket.bas` |
+
+#### Historical Game Mechanics & Fidelity
+- **Initial State:** Starts at 120 miles altitude falling downwards at 3,600 MPH (1.0 mi/s) with 33,000 lbs total mass (16,500 lbs dry capsule mass + 16,500 lbs fuel).
+- **Physical Constants:** Lunar gravity $G = 0.001\text{ mi/s}^2$ ($5.28\text{ ft/s}^2$), rocket exhaust coefficient $Z = 1.8\text{ mi/s}$, standard turn time step $T = 10\text{ seconds}$, maximum fuel burn rate $K = 200\text{ lbs/sec}$.
+- **Numerical Integration (Subroutine 420):** 5th-order Taylor series expansion of Tsiolkovsky's rocket equation accurately accounts for changing capsule mass during each burn interval.
+- **Mid-Turn Touchdown & Fuel Depletion:** Solves for exact surface contact moment when altitude $A \le 0$, and continues under free-fall gravity acceleration if fuel is exhausted.
+- **Evaluation Tiers (Historical Velocity Thresholds):**
+  - $\le 1.2\text{ MPH}$: "PERFECT LANDING !-(LUCKY)"
+  - $1.2 - 10.0\text{ MPH}$: "GOOD LANDING (COULD BE BETTER)"
+  - $10.0 - 60.0\text{ MPH}$: "CRAFT DAMAGE. . . STRANDED UNTIL RESCUE"
+  - $> 60.0\text{ MPH}$: "FATAL CRASH... CREATES A CRATER" ($W \times 0.227\text{ feet}$ deep).
+
+---
+
 ## 3. Planned Catalog Expansion (Coming Soon Titles)
 
 The following games are indexed in `game_registry.py` and planned for future milestone resurrection:
 
-### 3.1. Lunar Lander
-- **Original Creator:** Jim Storer (Lexington High School, 1969).
-- **Publication:** *101 BASIC Computer Games* (DEC, 1973); *BASIC Computer Games* (1978, pp. 106–108).
-- **Mechanics:** Physics-based numerical simulation of Apollo 11 lunar module descent. Burn fuel rates against lunar gravity ($1.62 \text{ m/s}^2$). Soft landing achieved below 5 ft/sec.
-
-### 3.2. Super Star Trek
+### 3.1. Super Star Trek
 - **Original Creator:** Mike Mayfield (1971, SDS Sigma 7); adapted by David H. Ahl & Bob Leedom (1974).
 - **Publication:** *Creative Computing* (1974); *BASIC Computer Games* (1978, pp. 157–163).
 - **Mechanics:** 8x8 quadrant galaxy command simulation. Energy management across phasers, photon torpedoes, long-range sensors, and dockings at starbases before stardates elapse.
 
-### 3.3. The Oregon Trail
+### 3.2. The Oregon Trail
 - **Original Creators:** Don Rawitsch, Bill Heinemann, and Paul Dillenberger (1971).
 - **Original Organization:** MECC (Minnesota Educational Computing Consortium).
 - **Publication:** *Creative Computing* (May/June 1978).

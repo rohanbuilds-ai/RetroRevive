@@ -9,5 +9,7 @@ import importlib
 # Dynamic module imports to bypass Python syntax limitation on leading digits (23_matches)
 matches_engine = importlib.import_module("games.23_matches.engine")
 matches_app = importlib.import_module("games.23_matches.app")
+lander_engine = importlib.import_module("games.lunar_lander.engine")
+lander_app = importlib.import_module("games.lunar_lander.app")
 
-__all__ = ["matches_engine", "matches_app"]
+__all__ = ["matches_engine", "matches_app", "lander_engine", "lander_app"]

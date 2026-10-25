@@ -9,8 +9,9 @@ Built as an extensible platform, RetroRevive currently features:
 1. **Central Graphical Game Library (`retrorevive.py`):** An arcade/retro-styled desktop hub featuring game catalog cards, category filters, real-time search, detail modals, and seamless launch/return routing.
 2. **Hammurabi: Reimagined (`ui_pygame.py`):** The iconic 1978 Sumerian kingdom simulation featuring an animated Mesopotamian landscape, Euphrates river, Ziggurat of Ur, Decree Preview ledger, Royal Advisors, and Scenarios.
 3. **23 Matches (`games/23_matches/`):** The timeless mathematical subtraction strategy game (Nim) by Bob Albrecht, featuring an animated wooden matchstick board, burning match effects, human-vs-computer play, and dual AI modes.
-4. **Coming Soon Index:** Metadata, provenance, and rules for upcoming classics: *Lunar Lander* (1973), *Super Star Trek* (1974), and *The Oregon Trail* (1971).
-5. **Standalone Terminal CLI Fallback (`main.py --cli`):** Zero-dependency pure standard library CLI for running both games in traditional text terminals.
+4. **Lunar Lander (`games/lunar_lander/`):** Jim Storer's 1969/1978 Apollo 11 lunar excursion module (LEM) descent simulation featuring 5th-order Taylor series rocket physics, animated LEM with gimbaling thrusters, particle exhaust flames, comprehensive telemetry dashboard, and auto-hover assist.
+5. **Coming Soon Index:** Metadata, provenance, and rules for upcoming classics: *Super Star Trek* (1974) and *The Oregon Trail* (1971).
+6. **Standalone Terminal CLI Fallback (`main.py --cli`):** Zero-dependency pure standard library CLI for running all three games in traditional text terminals.
 
 ---
 
@@ -54,6 +55,7 @@ pip install -r requirements-ui.txt
 - Start in fullscreen: `.venv\Scripts\python.exe main.py --fullscreen`
 - Launch Hammurabi directly: `.venv\Scripts\python.exe main.py --hammurabi`
 - Launch 23 Matches directly: `.venv\Scripts\python.exe main.py --matches`
+- Launch Lunar Lander directly: `.venv\Scripts\python.exe main.py --lander`
 
 ### Launch Standalone Terminal CLI (Zero Dependencies)
 ```powershell
@@ -62,6 +64,9 @@ pip install -r requirements-ui.txt
 
 # 23 Matches historical terminal mode:
 .venv\Scripts\python.exe main.py --matches --cli
+
+# Lunar Lander historical terminal mode:
+.venv\Scripts\python.exe main.py --lander --cli
 ```
 
 ---
@@ -82,6 +87,16 @@ pip install -r requirements-ui.txt
   - **1978 Albrecht AI:** Replicates the historical rule where the computer takes $4 - Z$ matches (where $Z$ is your move). If the player knows the trick and takes 2 matches on the opening turn ($23 - 2 = 21$), the player can force a win!
   - **Master Mind AI (Optimal Modular Nim):** Mathematically optimal AI that calculates modular remainder $r = (N - 1) \bmod 4$ and leaves you in a losing position at every turn.
 
+### Game 3: Lunar Lander (1978)
+- **Historical Provenance:** Authored by Jim Storer (Lexington High School, Autumn 1969 in FOCAL-69) and published in *101 BASIC Computer Games* (DEC, 1973) and *BASIC Computer Games* (1978, pp. 106–108).
+- **Core Mechanics:** Pilot the Apollo 11 lunar module (LEM) down to Tranquility Base from 120 miles altitude falling at 3,600 MPH (1.0 mi/s) with 16,500 lbs of fuel. Set engine burn rates ($0$–$200$ lbs/sec) over 10-second cycles. Governed by 5th-order Taylor series numerical integration of Tsiolkovsky's rocket equation.
+- **Landing Evaluation Tiers:**
+  - $\le 1.2\text{ MPH}$: Perfect Landing! (Lucky)
+  - $1.2 - 10.0\text{ MPH}$: Good Landing (Could be better)
+  - $10.0 - 60.0\text{ MPH}$: Craft Damage... Stranded until rescue
+  - $> 60.0\text{ MPH}$: Fatal Crash... Leaves a crater $W \times 0.227\text{ feet}$ deep.
+- **Flight Features:** Interactive burn rate presets (`0`, `50`, `100`, `150`, `MAX 200`), adjustment steppers (`-25`, `-10`, `+10`, `+25`), one-click **AUTO-HOVER** equilibrium calculation, and flight telemetry dashboard.
+
 ---
 
 ## 4. Platform Architecture & Extensibility
@@ -98,18 +113,23 @@ RetroRevive/
 ├── game_logic.py               # Hammurabi 1978 pure Python engine
 ├── modern_game_logic.py        # Hammurabi enhanced logic & persistence
 ├── games/
-│   └── 23_matches/
-│       ├── engine.py           # 23 Matches pure Python rule engine & AI
-│       ├── app.py              # 23 Matches Pygame matchstick board
-│       └── test_engine.py      # Automated tests for 23 Matches
+│   ├── 23_matches/
+│   │   ├── engine.py           # 23 Matches pure Python rule engine & AI
+│   │   ├── app.py              # 23 Matches Pygame matchstick board
+│   │   └── test_engine.py      # Automated tests for 23 Matches (16 tests)
+│   └── lunar_lander/
+│       ├── engine.py           # Lunar Lander pure Python simulation & physics
+│       ├── app.py              # Lunar Lander Pygame Apollo LEM & HUD
+│       └── test_engine.py      # Automated tests for Lunar Lander (17 tests)
 ├── test_game.py                # Hammurabi core unit tests (26 tests)
 ├── test_modern.py              # Hammurabi enhanced unit tests (7 tests)
 ├── test_ui.py                  # Hammurabi UI unit tests (27 tests)
-├── test_platform.py            # Platform hub, registry & navigation tests (16 tests)
+├── test_platform.py            # Platform hub, registry, and UI integration tests (24 tests)
 ├── verify_ui.py                # Visual screenshot verification script
 └── docs/
     ├── platform-architecture.md# Comprehensive architecture documentation
     ├── game-sources.md         # Historical provenance and licensing
+    ├── lunar-lander-rules.md   # Mathematical derivation, physics & tiers
     └── screenshots/            # Verified screenshots across resolutions
 ```
 
@@ -126,22 +146,23 @@ See [`docs/platform-architecture.md`](file:///e:/GitHub%20Projects/RetroRevive/d
 
 RetroRevive enforces rigorous test isolation across core domain engines, modern additions, UI state transitions, and platform navigation.
 
-### Run All 92 Automated Unit Tests
+### Run All 117 Automated Unit Tests
 ```powershell
 .venv\Scripts\python.exe -m unittest discover -v
 ```
-**Test Suite Breakdown (92 Tests Total):**
+**Test Suite Breakdown (117 Tests Total):**
 - `test_game.py`: **26 tests** (Historical formulas, land prices, harvest, rat infestation, safe prompt recovery, evaluation tiers).
 - `test_modern.py`: **7 tests** (Royal Advisors, Chronicle Log, Scenarios, JSON save/resume roundtrip).
 - `test_ui.py`: **27 tests** (Letterbox scaling, Decree Preview math, numeric steppers, text entry, keyboard navigation, modal focus).
 - `games.23_matches.test_engine`: **16 tests** (Initial state, bounds checking, integer validation, Misère termination, Albrecht AI, Optimal AI, repeatable scenarios).
-- `test_platform.py`: **16 tests** (Game Registry catalog queries, category filters, substring search, card cycling, details modal, launch/return lifecycle).
+- `games.lunar_lander.test_engine`: **17 tests** (Initial LEM state, burn rate validation, 5th-order Taylor series deceleration, free-fall under gravity, touchdown interpolation, 4 landing outcome tiers, crater depth formula).
+- `test_platform.py`: **24 tests** (Game Registry catalog queries, category filters, substring search, card cycling, details modal, launch/return lifecycle, 23 Matches UI interaction, Lunar Lander telemetry and controls).
 
 ### Run Automated Headless Visual UI Verification
 ```powershell
 .venv\Scripts\python.exe verify_ui.py
 ```
-Generates 12 verified screenshots in `docs/screenshots/` covering the platform library, game details modal, 23 Matches gameplay, 23 Matches victory, Hammurabi screens, and multi-resolution scaling ($1366\times768$ and $1920\times1080$).
+Generates 15 verified screenshots in `docs/screenshots/` covering the platform library, game details modal, 23 Matches gameplay, 23 Matches victory, Lunar Lander flight, Lunar Lander touchdown modal, Lunar Lander crash crater, Hammurabi screens, and multi-resolution scaling ($1366\times768$ and $1920\times1080$).
 
 ---
 
@@ -150,6 +171,7 @@ Generates 12 verified screenshots in `docs/screenshots/` covering the platform l
 ### Platform Hub Controls
 - `[1]`: Quick-launch Hammurabi
 - `[2]`: Quick-launch 23 Matches
+- `[3]`: Quick-launch Lunar Lander
 - `[←] / [→]`: Cycle selected game card
 - `[Enter] / [Space]`: Launch selected game (or open details if coming soon)
 - `[D]`: Open Game Details modal
@@ -168,6 +190,14 @@ Generates 12 verified screenshots in `docs/screenshots/` covering the platform l
 - Clickable action buttons with dynamic disabling when remaining matches $< 3$
 - Hoverable visual matchsticks with ember glow
 - `[Esc]`: Return to RetroRevive Game Library
+
+### Lunar Lander Controls
+- `[0]`, `[50]`, `[100]`, `[150]`, `[200]`: Direct burn presets
+- `[-25]`, `[-10]`, `[+10]`, `[+25]`: Quick throttle adjustment steppers
+- `[AUTO-HOVER]`: Automatically calculate fuel burn rate needed to balance lunar gravity
+- `[Space]` / Click `EXECUTE 10S BURN`: Ignite thruster for 10 seconds of descent
+- `[M]`: Open Apollo 11 Flight Manual modal
+- `[Esc]` / Click `← LIBRARY`: Return to RetroRevive Game Library
 
 ---
 

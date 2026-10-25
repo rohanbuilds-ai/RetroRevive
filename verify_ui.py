@@ -10,7 +10,7 @@ import os
 import pygame
 
 from game_logic import GameState
-from games import matches_app
+from games import lander_app, matches_app
 import retrorevive
 from ui_pygame import BASE_HEIGHT, BASE_WIDTH, GameApp
 from ui_theme import SoundSynthesizer
@@ -61,7 +61,41 @@ def run_visual_verification() -> bool:
     print(f"Captured: {m_over_path}")
 
     # -------------------------------------------------------------------------
-    # 3. Hammurabi Reimagined Screens
+    # 3. Lunar Lander Interface & Telemetry
+    # -------------------------------------------------------------------------
+    l_app = lander_app.LanderApp()
+    l_app._set_burn(100.0)
+    l_app._execute_burn()
+    l_app.update(0.1)
+    l_app.draw()
+    l_flight_path = "docs/screenshots/screenshot_lunar_lander_flight.png"
+    pygame.image.save(l_app.canvas, l_flight_path)
+    print(f"Captured: {l_flight_path}")
+
+    # Capture Perfect Touchdown Modal
+    l_app.state.landed = True
+    l_app.state.touchdown_velocity_mph = 1.05
+    l_app.state.outcome = "PERFECT"
+    l_app.state.outcome_message = "PERFECT LANDING !-(LUCKY)"
+    l_app.display_altitude = 0.0
+    l_app.display_velocity = 1.05 / 3600.0
+    l_app.draw()
+    l_landing_path = "docs/screenshots/screenshot_lunar_lander_landing.png"
+    pygame.image.save(l_app.canvas, l_landing_path)
+    print(f"Captured: {l_landing_path}")
+
+    # Capture Crash & Crater Depth Modal
+    l_app.state.touchdown_velocity_mph = 142.5
+    l_app.state.outcome = "CRASH"
+    l_app.state.crater_depth = round(142.5 * 0.227, 1)
+    l_app.state.outcome_message = f"THERE WERE NO SURVIVORS. CRATER IS {l_app.state.crater_depth} FEET DEEP."
+    l_app.draw()
+    l_crash_path = "docs/screenshots/screenshot_lunar_lander_crash.png"
+    pygame.image.save(l_app.canvas, l_crash_path)
+    print(f"Captured: {l_crash_path}")
+
+    # -------------------------------------------------------------------------
+    # 4. Hammurabi Reimagined Screens
     # -------------------------------------------------------------------------
     app = GameApp()
 

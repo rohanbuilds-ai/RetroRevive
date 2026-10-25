@@ -12,7 +12,7 @@ from typing import Callable, List, Optional, Tuple
 import pygame
 
 from game_registry import CATALOG, GameCategory, GameMetadata, GameRegistry, GameStatus
-from games import matches_app
+from games import lander_app, matches_app
 from ui_pygame import BASE_HEIGHT, BASE_WIDTH, GameApp
 from ui_theme import FontManager, Palette, SoundSynthesizer, UIButton
 
@@ -260,6 +260,11 @@ class RetroReviveHub:
                 shared_window=self.window,
                 on_exit_to_library=self._return_to_hub,
             )
+        elif game_id == "lunar_lander":
+            self.active_subapp = lander_app.LanderApp(
+                shared_window=self.window,
+                on_exit_to_library=self._return_to_hub,
+            )
         else:
             # Non-playable or unknown
             return
@@ -346,6 +351,8 @@ class RetroReviveHub:
                 self.launch_game("hammurabi")
             elif event.key in (pygame.K_2, pygame.K_KP2):
                 self.launch_game("23_matches")
+            elif event.key in (pygame.K_3, pygame.K_KP3):
+                self.launch_game("lunar_lander")
             elif event.key == pygame.K_s:
                 self.is_search_active = True
             elif event.key == pygame.K_LEFT:
@@ -442,7 +449,7 @@ class RetroReviveHub:
         pygame.draw.rect(self.canvas, (18, 14, 12), bot_rect)
         pygame.draw.line(self.canvas, Palette.PANEL_BORDER, (0, BASE_HEIGHT - 38), (BASE_WIDTH, BASE_HEIGHT - 38), 1)
 
-        shortcuts = "[1] Quick-Launch Hammurabi  |  [2] Quick-Launch 23 Matches  |  [←/→] Select Card  |  [Enter] Play  |  [D] Details  |  [Esc] Quit"
+        shortcuts = "[1] Hammurabi  |  [2] 23 Matches  |  [3] Lunar Lander  |  [←/→] Select  |  [Enter] Play  |  [D] Details  |  [Esc] Quit"
         sc_surf = FontManager.small(12).render(shortcuts, True, Palette.TEXT_MUTED)
         self.canvas.blit(sc_surf, sc_surf.get_rect(center=(BASE_WIDTH // 2, BASE_HEIGHT - 19)))
 
