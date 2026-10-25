@@ -125,6 +125,10 @@ class FontManager:
         return cls.get_font(size, bold=False, serif=False)
 
     @classmethod
+    def micro(cls, size: int = 11) -> pygame.font.Font:
+        return cls.get_font(size, bold=False, serif=False)
+
+    @classmethod
     def mono(cls, size: int = 18) -> pygame.font.Font:
         return cls.get_font(size, bold=True, serif=False)
 
@@ -198,17 +202,75 @@ class SoundSynthesizer:
         cls._sounds["gong"] = cls._create_tone(220, 0.45, volume=0.3, waveform="sine")
         cls._sounds["chime"] = cls._create_tone(1046, 0.18, volume=0.2, waveform="sine")
         cls._sounds["plague"] = cls._create_tone(180, 0.5, volume=0.35, waveform="square")
+        cls._sounds["laser"] = cls._create_tone(700, 0.12, volume=0.22, waveform="square")
+        cls._sounds["thrust"] = cls._create_tone(140, 0.2, volume=0.25, waveform="triangle")
+        cls._sounds["blip"] = cls._create_tone(1200, 0.02, volume=0.12, waveform="sine")
+        cls._sounds["fanfare"] = cls._create_tone(1318, 0.25, volume=0.25, waveform="sine")
+        cls._sounds["defeat"] = cls._create_tone(196, 0.4, volume=0.3, waveform="square")
 
     @classmethod
     def play(cls, sound_name: str) -> None:
         if not cls._enabled:
             return
-        snd = cls._sounds.get(sound_name)
+        alias_map = {
+            "tick": "click",
+            "select": "blip",
+            "victory": "fanfare",
+            "win": "fanfare",
+            "disaster": "plague",
+            "event_bad": "warning",
+            "new_game": "chime",
+            "purchase": "coin",
+            "phaser": "laser",
+            "torpedo": "laser",
+            "burn": "thrust",
+            "whoosh": "thrust",
+        }
+        resolved = alias_map.get(sound_name, sound_name)
+        snd = cls._sounds.get(resolved)
         if snd:
             try:
                 snd.play()
             except Exception:
                 pass
+
+
+# ---------------------------------------------------------------------------
+# Procedural CRT Scanline & Phosphor Filter
+# ---------------------------------------------------------------------------
+
+class CRTEffect:
+    """Subtle CRT monitor phosphor & scanline overlay for retro authenticity."""
+
+    _overlay: Optional[pygame.Surface] = None
+    _enabled: bool = False
+
+    @classmethod
+    def set_enabled(cls, enabled: bool) -> None:
+        cls._enabled = enabled
+
+    @classmethod
+    def is_enabled(cls) -> bool:
+        return cls._enabled
+
+    @classmethod
+    def toggle(cls) -> bool:
+        cls._enabled = not cls._enabled
+        return cls._enabled
+
+    @classmethod
+    def apply(cls, surface: pygame.Surface) -> None:
+        if not cls._enabled:
+            return
+        w, h = surface.get_size()
+        if cls._overlay is None or cls._overlay.get_size() != (w, h):
+            cls._overlay = pygame.Surface((w, h), pygame.SRCALPHA)
+            # Subtle scanlines every 3 pixels
+            for y in range(0, h, 3):
+                pygame.draw.line(cls._overlay, (0, 0, 0, 28), (0, y), (w, y), 1)
+            # Subtle phosphor frame border
+            pygame.draw.rect(cls._overlay, (15, 20, 10, 35), (0, 0, w, h), width=4, border_radius=6)
+        surface.blit(cls._overlay, (0, 0))
 
 
 # ---------------------------------------------------------------------------
@@ -237,6 +299,12 @@ class UIButton:
         self.is_pressed = False
         self.is_focused = False
         self.is_enabled = True
+        self.hover_progress = 0.0
+
+    def update(self, dt: float = 0.016) -> None:
+        """Smoothly interpolates hover animation factor."""
+        target = 1.0 if (self.is_hovered and self.is_enabled) else 0.0
+        self.hover_progress += (target - self.hover_progress) * min(1.0, dt * 12.0)
 
     def trigger(self) -> bool:
         """Executes callback programmatically via keyboard or script."""

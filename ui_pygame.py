@@ -41,6 +41,7 @@ from modern_game_logic import (
     step_enhanced_year,
 )
 from ui_theme import (
+    CRTEffect,
     DecreePreviewData,
     FontManager,
     Palette,
@@ -717,6 +718,15 @@ class GameApp:
         raw_pos = getattr(event, "pos", pygame.mouse.get_pos())
         canvas_mouse = self._screen_to_canvas(raw_pos)
 
+        # Global hotkeys
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F2:
+                CRTEffect.toggle()
+                return
+            elif event.key == pygame.K_F3:
+                SoundSynthesizer.set_enabled(not SoundSynthesizer._enabled)
+                return
+
         # Modal event consumption
         if self.active_modal:
             self.active_modal.handle_event(event, canvas_mouse)
@@ -943,6 +953,9 @@ class GameApp:
                 self.active_toast.draw(self.canvas)
             else:
                 self.active_toast = None
+
+        # Apply CRT Scanline and Phosphor filter if enabled
+        CRTEffect.apply(self.canvas)
 
         # Scale virtual canvas to letterboxed viewport
         vp_x, vp_y, vp_w, vp_h = self._compute_viewport()
