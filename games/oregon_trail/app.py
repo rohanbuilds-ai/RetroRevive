@@ -639,7 +639,10 @@ class OregonApp:
 
     def _draw_prairie_viewport(self) -> None:
         view_rect = pygame.Rect(25, 68, 830, 240)
-        pygame.draw.rect(self.canvas, (40, 60, 95), view_rect, border_radius=6)  # Prairie sky
+        self.canvas.set_clip(view_rect)
+
+        # Prairie sky background
+        pygame.draw.rect(self.canvas, (40, 60, 95), view_rect, border_radius=6)
 
         # Sky gradient
         sky_surf = pygame.Surface((view_rect.width, view_rect.height), pygame.SRCALPHA)
@@ -716,6 +719,9 @@ class OregonApp:
             heat_overlay = pygame.Surface((view_rect.width, 60), pygame.SRCALPHA)
             heat_overlay.fill((255, 200, 80, 25))
             self.canvas.blit(heat_overlay, (view_rect.x, view_rect.y + 120))
+
+        # Reset clipping
+        self.canvas.set_clip(None)
 
         # Border
         pygame.draw.rect(self.canvas, Palette.PANEL_BORDER, view_rect, width=2, border_radius=6)
@@ -832,12 +838,18 @@ class OregonApp:
             (marker_x + 6, bar_y - 14),
         ])
 
-        # Current landmark indicator text
+        # Current landmark indicator text with protective dark HUD plate
         curr_name = self.state.current_landmark.name
         nxt = self.state.next_landmark
         dist_str = f"Next: {nxt.name} ({int(self.state.distance_to_next_landmark)} mi)" if nxt else "Willamette Valley (Goal Reached!)"
-        lbl_surf = FontManager.small(11).render(f"LOCATION: {curr_name.upper()}  •  {dist_str}", True, Palette.TEXT_TITLE)
-        self.canvas.blit(lbl_surf, (bar_x, bar_y - 18))
+        lbl_surf = FontManager.micro(11).render(f"LOCATION: {curr_name.upper()}  •  {dist_str}", True, Palette.GOLD_LIGHT)
+        bg_pad = 6
+        plate_rect = pygame.Rect(bar_x - bg_pad, bar_y - 20, lbl_surf.get_width() + bg_pad * 2, lbl_surf.get_height() + 2)
+        plate_surf = pygame.Surface((plate_rect.width, plate_rect.height), pygame.SRCALPHA)
+        plate_surf.fill((20, 16, 12, 215))
+        self.canvas.blit(plate_surf, (plate_rect.x, plate_rect.y))
+        pygame.draw.rect(self.canvas, Palette.PANEL_BORDER, plate_rect, width=1, border_radius=4)
+        self.canvas.blit(lbl_surf, (bar_x, bar_y - 19))
 
     def _draw_status_card(self) -> None:
         """Top right card displaying vital journey conditions."""

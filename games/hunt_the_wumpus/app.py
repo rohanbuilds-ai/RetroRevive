@@ -385,10 +385,19 @@ class WumpusApp:
         pygame.draw.rect(self.canvas, Palette.BG_DARK, arrows_bg, border_radius=6)
         pygame.draw.rect(self.canvas, Palette.GOLD_LIGHT, arrows_bg, width=1, border_radius=6)
 
-        arrow_icon = "🏹"
-        arrow_txt = f"{arrow_icon} ARROWS: {self.state.arrows}/5"
-        arrow_surf = FontManager.header(16).render(arrow_txt, True, Palette.GOLD_LIGHT)
-        self.canvas.blit(arrow_surf, (arrows_bg.x + 16, arrows_bg.y + 8))
+        # Procedural retro arrow icon
+        mid_y = arrows_bg.centery
+        pygame.draw.line(self.canvas, Palette.GOLD_LIGHT, (arrows_bg.x + 14, mid_y), (arrows_bg.x + 28, mid_y), 2)
+        pygame.draw.polygon(self.canvas, Palette.GOLD_LIGHT, [
+            (arrows_bg.x + 33, mid_y),
+            (arrows_bg.x + 27, mid_y - 4),
+            (arrows_bg.x + 27, mid_y + 4),
+        ])
+        pygame.draw.line(self.canvas, Palette.CRIMSON_LIGHT, (arrows_bg.x + 15, mid_y - 3), (arrows_bg.x + 18, mid_y), 1)
+
+        arrow_txt = f"ARROWS: {self.state.arrows}/5"
+        arrow_surf = FontManager.header(15).render(arrow_txt, True, Palette.GOLD_LIGHT)
+        self.canvas.blit(arrow_surf, (arrows_bg.x + 40, arrows_bg.y + 8))
 
     def _draw_cavern_chamber(self) -> None:
         """Draw the left cavern perspective chamber with archway portals."""
@@ -457,8 +466,8 @@ class WumpusApp:
             w_rect = pygame.Rect(20, warn_y, 590, 40)
             pygame.draw.rect(self.canvas, (40, 12, 16), w_rect, border_radius=8)
             pygame.draw.rect(self.canvas, w_color, w_rect, width=2, border_radius=8)
-            msg = "⚠️  I SMELL A WUMPUS! (The beast is lurkng in an adjacent cavern!)"
-            s_surf = FontManager.header(16).render(msg, True, w_color)
+            msg = "[!] I SMELL A WUMPUS! (The beast is lurking in an adjacent cavern!)"
+            s_surf = FontManager.header(15).render(msg, True, w_color)
             self.canvas.blit(s_surf, (w_rect.x + 18, w_rect.y + 10))
             warn_y += 48
 
@@ -469,8 +478,8 @@ class WumpusApp:
             d_rect = pygame.Rect(20, warn_y, 590, 40)
             pygame.draw.rect(self.canvas, (12, 28, 44), d_rect, border_radius=8)
             pygame.draw.rect(self.canvas, d_color, d_rect, width=2, border_radius=8)
-            msg = "💨  I FEEL A DRAFT. (A bottomless pit opens nearby!)"
-            s_surf = FontManager.header(16).render(msg, True, d_color)
+            msg = "[~] I FEEL A DRAFT. (A bottomless pit opens nearby!)"
+            s_surf = FontManager.header(15).render(msg, True, d_color)
             self.canvas.blit(s_surf, (d_rect.x + 18, d_rect.y + 10))
             warn_y += 48
 
@@ -481,8 +490,8 @@ class WumpusApp:
             b_rect = pygame.Rect(20, warn_y, 590, 40)
             pygame.draw.rect(self.canvas, (32, 14, 40), b_rect, border_radius=8)
             pygame.draw.rect(self.canvas, b_color, b_rect, width=2, border_radius=8)
-            msg = "🦇  BATS NEARBY! (Colonies of giant snatch-bats flutter close!)"
-            s_surf = FontManager.header(16).render(msg, True, b_color)
+            msg = "[^] BATS NEARBY! (Colonies of giant snatch-bats flutter close!)"
+            s_surf = FontManager.header(15).render(msg, True, b_color)
             self.canvas.blit(s_surf, (b_rect.x + 18, b_rect.y + 10))
             warn_y += 48
 

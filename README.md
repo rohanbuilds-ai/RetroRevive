@@ -6,7 +6,7 @@
 RetroRevive brings classic computer games from the 1970s into the modern era through polished desktop graphics, animation, responsive controls, interactive tutorials, and optional modern enhancements—while strictly preserving original gameplay in verified Classic Modes.
 
 Built as an extensible platform, RetroRevive currently features:
-1. **Central Graphical Game Library (`retrorevive.py`):** An arcade/retro-styled desktop hub featuring authentic 2×3 game catalog cards, dynamic category filters, real-time search, detail modals, CRT monitor phosphor scanlines, procedural 8-bit sound synthesis, and seamless launch/return routing.
+1. **Central Graphical Game Library (`retrorevive.py`):** An arcade/retro-styled desktop hub featuring authentic 2×3 game catalog cards with dedicated procedural pixel-art vignettes, live animated online LED status badge, dynamic category filters, real-time search with one-click clear, detail modals, CRT monitor phosphor scanlines, procedural 8-bit sound synthesis, and seamless launch/return routing.
 2. **Hammurabi: Reimagined (`ui_pygame.py`):** The iconic 1978 Sumerian kingdom simulation featuring an animated Mesopotamian landscape, Euphrates river, Ziggurat of Ur, Decree Preview ledger, Royal Advisors, and Scenarios.
 3. **23 Matches (`games/23_matches/`):** The timeless mathematical subtraction strategy game (Nim) by Bob Albrecht, featuring an animated wooden matchstick board, ember sparks, burning match effects, human-vs-computer play, and dual AI modes.
 4. **Lunar Lander (`games/lunar_lander/`):** Jim Storer's 1969/1978 Apollo 11 lunar excursion module (LEM) descent simulation featuring 5th-order Taylor series rocket physics, animated LEM with gimbaling thrusters, particle exhaust flames, low-altitude regolith dust clouds, comprehensive telemetry dashboard, and auto-hover assist.
@@ -211,11 +211,11 @@ See [`docs/platform-architecture.md`](file:///e:/GitHub%20Projects/RetroRevive/d
 
 RetroRevive enforces rigorous test isolation across core domain engines, modern additions, UI state transitions, and platform navigation.
 
-### Run All 206 Automated Unit Tests
+### Run All 211 Automated Unit Tests
 ```powershell
 .venv\Scripts\python.exe -m unittest discover -v
 ```
-**Test Suite Breakdown (206 Tests Total):**
+**Test Suite Breakdown (211 Tests Total):**
 - `test_game.py`: **26 tests** (Historical formulas, land prices, harvest, rat infestation, safe prompt recovery, evaluation tiers).
 - `test_modern.py`: **7 tests** (Royal Advisors, Chronicle Log, Scenarios, JSON save/resume roundtrip).
 - `test_ui.py`: **31 tests** (Letterbox scaling, Decree Preview math, numeric steppers, text entry, Enter/Keypad Enter submission, Shift+Tab cycling, synthetic event safety, modal focus).
@@ -224,7 +224,7 @@ RetroRevive enforces rigorous test isolation across core domain engines, modern 
 - `games.oregon_trail.test_engine`: **20 tests** (Pioneer party initialization, profession multipliers, travel consumption, starvation health drain, oxen loss halts, resting and illness cure, hunting minimum ammo, successful and skunked hunt meat yields, shallow ford vs deep river, ferry tolls, distance store inflation, victory score math).
 - `games.super_star_trek.test_engine`: **19 tests** (Initial galaxy state, sector entities, compass heading math, impulse/warp traversal, phaser decay, torpedo ray-tracing collision, shield transfer, starbase docking, subsystem damage/repairs, LRS sensor scan, victory/defeat conditions).
 - `games.hunt_the_wumpus.test_engine`: **20 tests** (20-vertex dodecahedron topology, bidirectional edges, graph connectivity, hazard placement, draft/wumpus/bat sensory warnings, movement, pit death, bat transport, crooked arrow flight, ricochets, wumpus slaying, self-hit defeat, arrow exhaustion).
-- `test_platform.py`: **50 tests** (Game Registry catalog queries, 6 playable games filter, category filters, substring search, card cycling, details modal, launch/return lifecycle, hotkey quick launches [1]-[6], 23 Matches UI interaction and keypad shortcuts, Lunar Lander telemetry, M flight manual toggle, Oregon Trail journey travel, pace/rations cycling, store purchasing, Super Star Trek tactical cockpit, navigation, sensors, Hunt the Wumpus cavern chamber, Schlegel chart, crooked arrows, and restart).
+- `test_platform.py`: **55 tests** (Game Registry catalog queries, 6 playable games filter, category filters, substring search, card cycling, details modal, launch/return lifecycle, hotkey quick launches [1]-[6], 23 Matches UI interaction and keypad shortcuts, Lunar Lander telemetry, M flight manual toggle, Oregon Trail journey travel, pace/rations cycling, store purchasing, Super Star Trek tactical cockpit, navigation, sensors, Hunt the Wumpus cavern chamber, Schlegel chart, crooked arrows, restart, procedural card art generation, delta-time transitions, search clearing, and hover interpolation).
 
 ### Run Automated Headless Visual UI Verification
 ```powershell

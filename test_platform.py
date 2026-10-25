@@ -20,9 +20,9 @@ from games import (
     wumpus_app,
     wumpus_engine,
 )
-from retrorevive import RetroReviveHub
+from retrorevive import CardArtRenderer, RetroReviveHub
 from ui_pygame import GameApp
-from ui_theme import SoundSynthesizer
+from ui_theme import SoundSynthesizer, UIButton
 
 
 class TestGameRegistry(unittest.TestCase):
@@ -668,6 +668,72 @@ class TestWumpusAppUI(unittest.TestCase):
         self.assertEqual(self.app.state.arrows, 5)
         self.assertFalse(self.app.state.is_game_over)
         self.assertEqual(len(self.app.selected_arrow_path), 0)
+
+
+class TestUIAndArtworkEnhancements(unittest.TestCase):
+    """Verifies procedural card artwork generation, delta-time transitions, and search clearing."""
+
+    def setUp(self) -> None:
+        pygame.init()
+        SoundSynthesizer.set_enabled(False)
+        self.hub = RetroReviveHub()
+
+    def test_card_art_renderer_all_games(self) -> None:
+        expected_games = ["hammurabi", "23_matches", "lunar_lander", "oregon_trail", "super_star_trek", "hunt_the_wumpus"]
+        for gid in expected_games:
+            surf = CardArtRenderer.get_art(gid, 94, 132)
+            self.assertIsInstance(surf, pygame.Surface)
+            self.assertEqual(surf.get_size(), (94, 132))
+
+            # Test caching
+            surf_cached = CardArtRenderer.get_art(gid, 94, 132)
+            self.assertIs(surf, surf_cached)
+
+    def test_library_card_update_hover_interpolation(self) -> None:
+        card = self.hub.cards[0]
+        card.is_selected = False
+        card.hover_progress = 0.0
+        self.assertEqual(card.hover_progress, 0.0)
+
+        # Mark hovered and update with small delta time
+        card.is_hovered = True
+        card.update(0.05)
+        self.assertGreater(card.hover_progress, 0.0)
+        self.assertLess(card.hover_progress, 1.0)
+
+        # Unmark hovered and update
+        card.is_hovered = False
+        card.update(0.1)
+        self.assertLess(card.hover_progress, 0.5)
+
+    def test_hub_search_clear_button(self) -> None:
+        self.hub.search_query = "nim"
+        self.hub._refresh_game_cards()
+        self.assertEqual(len(self.hub.cards), 1)
+
+        # Click clear [X] button on search bar: (BASE_WIDTH - 360 + 320 - 15, 106 + 15)
+        clear_x = 1280 - 360 + 320 - 15
+        clear_y = 106 + 15
+        click_ev = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": (clear_x, clear_y)})
+        self.hub.handle_event(click_ev)
+
+        self.assertEqual(self.hub.search_query, "")
+        self.assertEqual(len(self.hub.cards), 6)
+
+    def test_hub_status_pulse_timer_advances(self) -> None:
+        initial = self.hub.status_pulse_timer
+        self.hub.update(0.25)
+        self.assertAlmostEqual(self.hub.status_pulse_timer, initial + 0.25, delta=0.01)
+
+    def test_ui_button_hover_progress(self) -> None:
+        btn = UIButton((0, 0, 100, 40), "TEST")
+        self.assertEqual(btn.hover_progress, 0.0)
+        btn.is_hovered = True
+        btn.update(0.1)
+        self.assertGreater(btn.hover_progress, 0.0)
+        btn.is_hovered = False
+        btn.update(0.2)
+        self.assertLess(btn.hover_progress, 0.5)
 
 
 if __name__ == "__main__":

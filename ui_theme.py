@@ -125,6 +125,10 @@ class FontManager:
         return cls.get_font(size, bold=False, serif=False)
 
     @classmethod
+    def micro(cls, size: int = 11) -> pygame.font.Font:
+        return cls.get_font(size, bold=False, serif=False)
+
+    @classmethod
     def mono(cls, size: int = 18) -> pygame.font.Font:
         return cls.get_font(size, bold=True, serif=False)
 
@@ -295,6 +299,12 @@ class UIButton:
         self.is_pressed = False
         self.is_focused = False
         self.is_enabled = True
+        self.hover_progress = 0.0
+
+    def update(self, dt: float = 0.016) -> None:
+        """Smoothly interpolates hover animation factor."""
+        target = 1.0 if (self.is_hovered and self.is_enabled) else 0.0
+        self.hover_progress += (target - self.hover_progress) * min(1.0, dt * 12.0)
 
     def trigger(self) -> bool:
         """Executes callback programmatically via keyboard or script."""
