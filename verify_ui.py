@@ -10,7 +10,7 @@ import os
 import pygame
 
 from game_logic import GameState
-from games import lander_app, matches_app, oregon_app
+from games import lander_app, matches_app, oregon_app, trek_app
 import retrorevive
 from ui_pygame import BASE_HEIGHT, BASE_WIDTH, GameApp
 from ui_theme import SoundSynthesizer
@@ -136,7 +136,48 @@ def run_visual_verification() -> bool:
     print(f"Captured: {o_victory_path}")
 
     # -------------------------------------------------------------------------
-    # 5. Hammurabi Reimagined Screens
+    # 5. Super Star Trek Tactical Bridge, Sensors & Scoring
+    # -------------------------------------------------------------------------
+    t_app = trek_app.TrekApp()
+    t_app.update(0.1)
+    t_app.draw()
+    t_bridge_path = "docs/screenshots/screenshot_super_star_trek_bridge.png"
+    pygame.image.save(t_app.canvas, t_bridge_path)
+    print(f"Captured: {t_bridge_path}")
+
+    # Capture Long Range Sensor (LRS) scan
+    t_app._trigger_lrs()
+    t_app.draw()
+    t_lrs_path = "docs/screenshots/screenshot_super_star_trek_lrs.png"
+    pygame.image.save(t_app.canvas, t_lrs_path)
+    print(f"Captured: {t_lrs_path}")
+
+    # Capture Weapon animation / combat state
+    t_app.weapon_anim_timer = 0.5
+    t_app.weapon_anim_type = "PHASER"
+    t_app.weapon_anim_target = (700, 300)
+    t_app.draw()
+    t_combat_path = "docs/screenshots/screenshot_super_star_trek_combat.png"
+    pygame.image.save(t_app.canvas, t_combat_path)
+    print(f"Captured: {t_combat_path}")
+    t_app.weapon_anim_timer = 0.0
+
+    # Capture Victory Outcome Modal
+    t_app.state.is_game_over = True
+    t_app.state.victory = True
+    t_app.state.game_over_reason = (
+        "CONGRATULATIONS, CAPTAIN!\n"
+        "THE FEDERATION IS SAVED!\n"
+        "All Klingon battlecruisers destroyed."
+    )
+    t_app.show_outcome_modal = True
+    t_app.draw()
+    t_victory_path = "docs/screenshots/screenshot_super_star_trek_victory.png"
+    pygame.image.save(t_app.canvas, t_victory_path)
+    print(f"Captured: {t_victory_path}")
+
+    # -------------------------------------------------------------------------
+    # 6. Hammurabi Reimagined Screens
     # -------------------------------------------------------------------------
     app = GameApp()
 

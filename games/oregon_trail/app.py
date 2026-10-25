@@ -799,7 +799,7 @@ class OregonApp:
         w = self.state.weather
         if w in (Weather.FAIR, Weather.WARM):
             return Palette.SUCCESS_GREEN
-        elif w in (Weather.RAIN, Weather.MUD, Weather.FOG):
+        elif w in (Weather.RAINY, Weather.COOL, Weather.COLD):
             return Palette.AMBER_WARN
         return Palette.CRIMSON_LIGHT
 

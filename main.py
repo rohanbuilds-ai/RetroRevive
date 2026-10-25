@@ -338,6 +338,11 @@ def main() -> None:
         help="Launch The Oregon Trail directly",
     )
     parser.add_argument(
+        "--trek",
+        action="store_true",
+        help="Launch Super Star Trek directly",
+    )
+    parser.add_argument(
         "--fullscreen",
         action="store_true",
         help="Launch desktop interface in fullscreen mode",
@@ -415,6 +420,11 @@ def main() -> None:
                 app = oregon_app.OregonApp(start_fullscreen=args.fullscreen)
                 app.run()
                 return
+            elif args.trek:
+                from games import trek_app
+                app = trek_app.TrekApp(start_fullscreen=args.fullscreen)
+                app.run()
+                return
             elif args.hammurabi:
                 from ui_pygame import GameApp
                 app = GameApp(start_fullscreen=args.fullscreen)
@@ -442,6 +452,10 @@ def main() -> None:
     if args.oregon:
         from games import oregon_engine
         oregon_engine.play_cli()
+        return
+    if args.trek:
+        from games import trek_engine
+        trek_engine.play_cli()
         return
 
     # Standard Hammurabi Terminal CLI

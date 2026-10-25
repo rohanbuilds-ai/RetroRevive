@@ -147,19 +147,25 @@ CATALOG: Dict[str, GameMetadata] = {
         original_publisher="Creative Computing",
         category=GameCategory.ADVENTURE_SPACE,
         category_display="Adventure & Space",
-        status=GameStatus.COMING_SOON,
-        modes=["Classic Sector Grid", "Tactical Sensor Array"],
+        status=GameStatus.PLAYABLE,
+        modes=["1978 Strategic Space Combat", "Tactical Sensor Array & Starbase Operations"],
         description=(
-            "Command the USS Enterprise across an 8x8 quadrant galaxy. Hunt Klingon warships, "
-            "manage photon torpedoes, shields, and dock at starbases before stardates expire."
+            "Command the USS Enterprise across an 8x8 quadrant galaxy. Hunt down Klingon battlecruisers, "
+            "fire directional photon torpedoes and energy phasers, manage deflector shields, and dock "
+            "at Federation Starbases before your mission stardates expire."
         ),
         rules_summary=(
-            "Navigate through 64 quadrants. Balance energy between shields, phasers, and warp engines. "
-            "Neutralize all Klingon battlecruisers before time runs out."
+            "Navigate through 64 quadrants (8x8 grid) and 64 sectors per quadrant. Balance energy between "
+            "warp engines, phasers, and protective shields. Fire photon torpedoes along straight-line courses. "
+            "Dock adjacent to Starbases to repair damaged subsystems and replenish energy and torpedoes."
         ),
-        historical_provenance="Originated on SDS Sigma 7 by Mike Mayfield in 1971; expanded into Super Star Trek by David H. Ahl and Bob Leedom in 1974.",
-        book_source="BASIC Computer Games (1978), pp. 157-163.",
-        tags=["Sci-Fi", "Tactical", "Grid Command", "Coming Soon"],
+        historical_provenance=(
+            "Created on an SDS Sigma 7 by Mike Mayfield in 1971 in BASIC. David H. Ahl and Bob Leedom "
+            "expanded it into Super Star Trek in 1974. Published in Creative Computing and BASIC Computer Games "
+            "(1978, pp. 157-163). Preserves authentic quadrant/sector coordinates and device damage rules."
+        ),
+        book_source="BASIC Computer Games: Microcomputer Edition (1978), pp. 157-163.",
+        tags=["Sci-Fi", "Tactical", "Grid Command", "Playable", "Classic 1978"],
     ),
     "oregon_trail": GameMetadata(
         game_id="oregon_trail",

@@ -21,23 +21,26 @@ flowchart TD
     Reg -.-> G2["23 Matches (Playable)"]
     Reg -.-> G3["Lunar Lander (Playable)"]
     Reg -.-> G4["The Oregon Trail (Playable)"]
-    Reg -.-> G5["Super Star Trek (Coming Soon)"]
+    Reg -.-> G5["Super Star Trek (Playable)"]
     
     Hub --> Sub1["ui_pygame.GameApp (Hammurabi Desktop UI)"]
     Hub --> Sub2["games.23_matches.app.MatchesApp (23 Matches Desktop UI)"]
     Hub --> Sub3["games.lunar_lander.app.LanderApp (Lunar Lander Desktop UI)"]
     Hub --> Sub4["games.oregon_trail.app.OregonApp (Oregon Trail Desktop UI)"]
+    Hub --> Sub5["games.super_star_trek.app.TrekApp (Super Star Trek Desktop UI)"]
     
     Sub1 --> E1["game_logic.py (1978 Historical Engine)"]
     Sub1 --> E2["modern_game_logic.py (Enhanced Engine)"]
     Sub2 --> E3["games.23_matches.engine.py (1978 Nim Engine)"]
     Sub3 --> E4["games.lunar_lander.engine.py (1978 Lunar LEM Engine)"]
     Sub4 --> E5["games.oregon_trail.engine.py (1848 Pioneer Engine)"]
+    Sub5 --> E6["games.super_star_trek.engine.py (1978 Starfleet Engine)"]
     
     Sub1 -.-> HubReturn["Clean Exit Callback -> Return to Hub"]
     Sub2 -.-> HubReturn
     Sub3 -.-> HubReturn
     Sub4 -.-> HubReturn
+    Sub5 -.-> HubReturn
 ```
 
 ---
@@ -67,21 +70,27 @@ RetroRevive/
 │   │   ├── engine.py           # Pure Python standard-library Lunar Lander simulation
 │   │   ├── app.py              # Pygame desktop UI with Apollo LEM & telemetry dashboard
 │   │   └── test_engine.py      # Automated tests for burn physics and landing tiers (17 tests)
-│   └── oregon_trail/
+│   ├── oregon_trail/
+│   │   ├── __init__.py         # Package exports
+│   │   ├── engine.py           # Pure Python standard-library 1848 pioneer simulation
+│   │   ├── app.py              # Pygame desktop UI with animated wagon & trail dashboard
+│   │   └── test_engine.py      # Automated tests for travel, river, store & scoring (20 tests)
+│   └── super_star_trek/
 │       ├── __init__.py         # Package exports
-│       ├── engine.py           # Pure Python standard-library 1848 pioneer simulation
-│       ├── app.py              # Pygame desktop UI with animated wagon & trail dashboard
-│       └── test_engine.py      # Automated tests for travel, river, store & scoring (20 tests)
+│       ├── engine.py           # Pure Python standard-library 1978 galactic simulation
+│       ├── app.py              # Pygame desktop UI with tactical SRS radar, LRS sensors & cockpit
+│       └── test_engine.py      # Automated tests for navigation, phasers, torpedoes, docking (19 tests)
 ├── test_game.py                # Historical Hammurabi unit tests (26 tests)
 ├── test_modern.py              # Enhanced Hammurabi unit tests (7 tests)
 ├── test_ui.py                  # Hammurabi UI unit tests (31 tests)
-├── test_platform.py            # Platform Hub, Registry, and Navigation tests (35 tests)
+├── test_platform.py            # Platform Hub, Registry, and Navigation tests (43 tests)
 ├── verify_ui.py                # Headless visual verification & screenshot generator
 ├── docs/
 │   ├── platform-architecture.md# Platform design and extensibility guide
 │   ├── game-sources.md         # Historical provenance and licensing attribution
 │   ├── lunar-lander-rules.md   # Mathematical derivation, physics, and landing tiers
 │   ├── oregon-trail-rules.md   # 1848 route map, landmark guide, math, health equations
+│   ├── super-star-trek-rules.md# Galactic coordinate math, phaser formulas, torpedo ballistics
 │   └── screenshots/            # Verified visual outputs across resolutions
 ```
 

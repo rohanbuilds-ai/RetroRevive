@@ -121,14 +121,43 @@ To respect historical attribution and software licensing:
 
 ---
 
+### 2.5. Super Star Trek (1978 Strategic Space Fleet Simulation)
+
+| Attribute | Verified Historical Record |
+| :--- | :--- |
+| **Original Creator** | Mike Mayfield (1971) |
+| **Original Platform** | SDS Sigma 7 minicomputer (HP 2000C BASIC) |
+| **Adaptation & Expansion** | David H. Ahl & Mary Cole (DEC BASIC-PLUS, 1973); Bob Leedom (Westinghouse, 1974) |
+| **Magazine Publication** | *Creative Computing*, July/August 1974 |
+| **Microcomputer Publication** | *BASIC Computer Games: Microcomputer Edition*, ed. David H. Ahl, Creative Computing Press, 1978, pp. 157–163 |
+| **Target Verified Edition** | **1978 Creative Computing / Microsoft BASIC Edition** |
+| **Program File Name in Archives** | `startrek.bas` / `spsttr.bas` |
+
+#### Historical Game Mechanics & Fidelity
+- **Galactic Grid Model:** 8×8 matrix of Quadrants (64 total) with historical star names (Antares, Rigel, Vega, Canopus, etc.), each containing an 8×8 sector grid (4,096 total sectors).
+- **Navigation Vector Physics:** Directional navigation courses 1.0 through 8.9 (1=East, 3=North, 5=West, 7=South) with trigonometric heading displacement and warp factor fuel burn: $E = \text{round}(8 \cdot W)$.
+- **Directed Phasers:** Inverse distance energy decay: $H_i = \text{round}\left(\frac{P / N}{D_i} \cdot (2.0 + R)\right)$ distributing energy across all hostiles.
+- **Ballistic Photon Torpedoes:** Ray-traced projectile trajectories checking step-by-step collisions with Klingons, stars, starbases, or galactic edge.
+- **Deflector Shields & Retaliation:** 2,500-unit shield envelope, dynamic 1:1 energy transfer, and retaliatory counter-fire from Klingon battlecruisers.
+- **Long-Range Sensors (LRS):** 3×3 reconnaissance scan returning authentic 3-digit $K S B$ telemetry code.
+- **Starbase Resupply & Subsystem Damage:** Docking restores 3,000 energy, 10 torpedoes, 500 shields, and repairs 7 ship systems (Warp Engines, Short Range Sensors, Long Range Sensors, Phaser Control, Photon Tubes, Shield Control, Library Computer).
+- **Mission Deadline:** Stardate countdown timer with Starfleet efficiency score evaluation and officer ranks (Fleet Admiral down to Lieutenant).
+
+---
+
 ## 3. Planned Catalog Expansion (Coming Soon Titles)
 
-The following game is indexed in `game_registry.py` and planned for future milestone resurrection:
+The following classic games are indexed in `game_registry.py` and planned for future milestone resurrection:
 
-### 3.1. Super Star Trek
-- **Original Creator:** Mike Mayfield (1971, SDS Sigma 7); adapted by David H. Ahl & Bob Leedom (1974).
-- **Publication:** *Creative Computing* (1974); *BASIC Computer Games* (1978, pp. 157–163).
-- **Mechanics:** 8x8 quadrant galaxy command simulation. Energy management across phasers, photon torpedoes, long-range sensors, and dockings at starbases before stardates elapse.
+### 3.1. Hunt the Wumpus
+- **Original Creator:** Gregory Yob (1973, Dartmouth College, People's Computer Company).
+- **Publication:** *Creative Computing* (1975); *BASIC Computer Games* (1978, pp. 178–181).
+- **Mechanics:** 20-room dodecahedron cave topology, super bats, bottomless slime pits, crooked arrow trajectories, sensory warnings ("I smell a Wumpus", "I feel a draft", "Bats nearby!").
+
+### 3.2. Colossal Cave Adventure
+- **Original Creators:** Will Crowther (BBN, 1976) & Don Woods (Stanford AI Lab, 1977).
+- **Publication:** DECUS archive, early ARPANET distribution.
+- **Mechanics:** Two-word verb-noun parser, underground cave exploration, magic words ("XYZZY", "PLUGH"), treasure inventory management, dwarf encounters, and pirate thievery.
 
 ---
 

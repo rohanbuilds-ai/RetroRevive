@@ -11,8 +11,9 @@ Built as an extensible platform, RetroRevive currently features:
 3. **23 Matches (`games/23_matches/`):** The timeless mathematical subtraction strategy game (Nim) by Bob Albrecht, featuring an animated wooden matchstick board, burning match effects, human-vs-computer play, and dual AI modes.
 4. **Lunar Lander (`games/lunar_lander/`):** Jim Storer's 1969/1978 Apollo 11 lunar excursion module (LEM) descent simulation featuring 5th-order Taylor series rocket physics, animated LEM with gimbaling thrusters, particle exhaust flames, comprehensive telemetry dashboard, and auto-hover assist.
 5. **The Oregon Trail (`games/oregon_trail/`):** Don Rawitsch, Bill Heinemann, and Paul Dillenberger's 1971/1978 historic 2,040-mile pioneer expedition featuring an animated covered wagon with rotating spoked wheels and walking oxen team, interactive 17-landmark route map, river crossings, hunting expeditions, distance-inflation trading posts, and profession scoring multipliers.
-6. **Coming Soon Index:** Metadata, provenance, and rules for upcoming classics: *Super Star Trek* (1974).
-7. **Standalone Terminal CLI Fallback (`main.py --cli`):** Zero-dependency pure standard library CLI for running all playable games in traditional text terminals.
+6. **Super Star Trek (`games/super_star_trek/`):** Mike Mayfield, David H. Ahl, and Bob Leedom's 1971/1974/1978 galactic fleet command simulation featuring an 8×8 quadrant galaxy (4,096 sectors), directional vector navigation, directed phasers, ray-traced photon torpedoes, deflector shields, 3×3 Long-Range Sensor scans, Starbase docking, and subsystem damage modeling.
+7. **Coming Soon Index:** Metadata, provenance, and rules for upcoming classics: *Hunt the Wumpus* (1973) and *Colossal Cave Adventure* (1976).
+8. **Standalone Terminal CLI Fallback (`main.py --cli`):** Zero-dependency pure standard library CLI for running all playable games in traditional text terminals.
 
 ---
 
@@ -58,6 +59,7 @@ pip install -r requirements-ui.txt
 - Launch 23 Matches directly: `.venv\Scripts\python.exe main.py --matches`
 - Launch Lunar Lander directly: `.venv\Scripts\python.exe main.py --lander`
 - Launch The Oregon Trail directly: `.venv\Scripts\python.exe main.py --oregon`
+- Launch Super Star Trek directly: `.venv\Scripts\python.exe main.py --trek`
 
 ### Launch Standalone Terminal CLI (Zero Dependencies)
 ```powershell
@@ -72,6 +74,9 @@ pip install -r requirements-ui.txt
 
 # The Oregon Trail historical terminal mode:
 .venv\Scripts\python.exe main.py --oregon --cli
+
+# Super Star Trek historical terminal mode:
+.venv\Scripts\python.exe main.py --trek --cli
 ```
 
 ---
@@ -113,6 +118,18 @@ pip install -r requirements-ui.txt
   - **Health & Disaster System:** Manage illnesses (Cholera, Dysentery, Typhoid, Measles, Fever, Snakebite), wagon repairs with spare parts (wheels, axles, tongues), and rest recuperation.
   - **Historic Scoring:** Survivor bonuses, good health points, remaining asset value, and profession difficulty multipliers (Banker $1.0\times$, Carpenter $2.0\times$, Farmer $3.0\times$).
 
+### Game 5: Super Star Trek (1978 Strategic Space Fleet Simulation)
+- **Historical Provenance:** Authored by Mike Mayfield (1971, SDS Sigma 7); expanded by David H. Ahl & Mary Cole (DEC, 1973) and Bob Leedom (Westinghouse, 1974); published in *BASIC Computer Games* (1978, pp. 157–163).
+- **Core Mechanics:** Command the U.S.S. Enterprise (NCC-1701) across an 8×8 quadrant galaxy ($4,096\text{ sectors}$) on a critical mission to neutralize Klingon battlecruisers before the stardate deadline expires.
+- **Cockpit Systems & Controls:**
+  - **Tactical SRS Grid (8×8):** Visual sector radar rendering Enterprise (`<*>`), Klingons (`+K+`), Starbases (`>!<`), and Stars (`*`).
+  - **Navigational Propulsion:** 8-direction compass course vector calculations ($1.0$–$8.9$) with impulse and warp speeds.
+  - **Tactical Combat:** Directed Phaser energy attenuation across hostiles, and ray-traced Photon Torpedo trajectories with obstacle collisions.
+  - **Deflector Shields:** 2,500-unit protective energy envelope with live transfer between main reserves and shields.
+  - **Reconnaissance & Sensors:** Long-Range Sensor (LRS) 3×3 scan returning authentic 3-digit $K S B$ telemetry code.
+  - **Starbase Docking:** Full energy, torpedo, and shield replenishment plus instant repair of 7 ship subsystems.
+  - **Starfleet Efficiency Scoring:** Dynamic evaluation of Klingons destroyed, energy conservation, stardate speed, and officer ranks (Fleet Admiral to Lieutenant).
+
 ---
 
 ## 4. Platform Architecture & Extensibility
@@ -133,19 +150,29 @@ RetroRevive/
 │   │   ├── engine.py           # 23 Matches pure Python rule engine & AI
 │   │   ├── app.py              # 23 Matches Pygame matchstick board
 │   │   └── test_engine.py      # Automated tests for 23 Matches (16 tests)
-│   └── lunar_lander/
-│       ├── engine.py           # Lunar Lander pure Python simulation & physics
-│       ├── app.py              # Lunar Lander Pygame Apollo LEM & HUD
-│       └── test_engine.py      # Automated tests for Lunar Lander (17 tests)
+│   ├── lunar_lander/
+│   │   ├── engine.py           # Lunar Lander pure Python simulation & physics
+│   │   ├── app.py              # Lunar Lander Pygame Apollo LEM & HUD
+│   │   └── test_engine.py      # Automated tests for Lunar Lander (17 tests)
+│   ├── oregon_trail/
+│   │   ├── engine.py           # Oregon Trail pure Python 1848 pioneer simulation
+│   │   ├── app.py              # Oregon Trail Pygame animated wagon & trail HUD
+│   │   └── test_engine.py      # Automated tests for Oregon Trail (20 tests)
+│   └── super_star_trek/
+│       ├── engine.py           # Super Star Trek pure Python 1978 galaxy engine
+│       ├── app.py              # Super Star Trek Pygame tactical radar & bridge
+│       └── test_engine.py      # Automated tests for Super Star Trek (19 tests)
 ├── test_game.py                # Hammurabi core unit tests (26 tests)
 ├── test_modern.py              # Hammurabi enhanced unit tests (7 tests)
 ├── test_ui.py                  # Hammurabi UI unit tests (31 tests)
-├── test_platform.py            # Platform hub, registry, and UI integration tests (28 tests)
+├── test_platform.py            # Platform hub, registry, and UI integration tests (43 tests)
 ├── verify_ui.py                # Visual screenshot verification script
 └── docs/
     ├── platform-architecture.md# Comprehensive architecture documentation
     ├── game-sources.md         # Historical provenance and licensing
     ├── lunar-lander-rules.md   # Mathematical derivation, physics & tiers
+    ├── oregon-trail-rules.md   # 1848 route map, landmark guide, math, health equations
+    ├── super-star-trek-rules.md# Galactic coordinate math, phaser formulas, torpedo ballistics
     └── screenshots/            # Verified screenshots across resolutions
 ```
 
@@ -162,17 +189,25 @@ See [`docs/platform-architecture.md`](file:///e:/GitHub%20Projects/RetroRevive/d
 
 RetroRevive enforces rigorous test isolation across core domain engines, modern additions, UI state transitions, and platform navigation.
 
-### Run All 152 Automated Unit Tests
-`powershell
+### Run All 179 Automated Unit Tests
+```powershell
 .venv\Scripts\python.exe -m unittest discover -v
-`
-**Test Suite Breakdown (152 Tests Total):**
-- 	est_game.py: **26 tests** (Historical formulas, land prices, harvest, rat infestation, safe prompt recovery, evaluation tiers).
-- 	est_modern.py: **7 tests** (Royal Advisors, Chronicle Log, Scenarios, JSON save/resume roundtrip).
-- 	est_ui.py: **31 tests** (Letterbox scaling, Decree Preview math, numeric steppers, text entry, Enter/Keypad Enter submission, Shift+Tab cycling, synthetic event safety, modal focus).
-- games.23_matches.test_engine: **16 tests** (Initial state, bounds checking, integer validation, Misère termination, Albrecht AI, Optimal AI, repeatable scenarios).
-- games.lunar_lander.test_engine: **17 tests** (Initial LEM state, burn rate validation, 5th-order Taylor series deceleration, free-fall under gravity, touchdown interpolation, 4 landing outcome tiers, crater depth formula).
-- games.oregon_trail.test_engine: **20 tests** (Pioneer party initialization, profession multipliers, travel consumption, starvation health drain, oxen loss halts, resting and illness cure, hunting minimum ammo, successful and skunked hunt meat yields, shallow ford vs deep river, ferry tolls, distance store inflation, victory score math).
+```
+**Test Suite Breakdown (179 Tests Total):**
+- `test_game.py`: **26 tests** (Historical formulas, land prices, harvest, rat infestation, safe prompt recovery, evaluation tiers).
+- `test_modern.py`: **7 tests** (Royal Advisors, Chronicle Log, Scenarios, JSON save/resume roundtrip).
+- `test_ui.py`: **31 tests** (Letterbox scaling, Decree Preview math, numeric steppers, text entry, Enter/Keypad Enter submission, Shift+Tab cycling, synthetic event safety, modal focus).
+- `games.23_matches.test_engine`: **16 tests** (Initial state, bounds checking, integer validation, Misère termination, Albrecht AI, Optimal AI, repeatable scenarios).
+- `games.lunar_lander.test_engine`: **17 tests** (Initial LEM state, burn rate validation, 5th-order Taylor series deceleration, free-fall under gravity, touchdown interpolation, 4 landing outcome tiers, crater depth formula).
+- `games.oregon_trail.test_engine`: **20 tests** (Pioneer party initialization, profession multipliers, travel consumption, starvation health drain, oxen loss halts, resting and illness cure, hunting minimum ammo, successful and skunked hunt meat yields, shallow ford vs deep river, ferry tolls, distance store inflation, victory score math).
+- `games.super_star_trek.test_engine`: **19 tests** (Initial galaxy state, sector entities, compass heading math, impulse/warp traversal, phaser decay, torpedo ray-tracing collision, shield transfer, starbase docking, subsystem damage/repairs, LRS sensor scan, victory/defeat conditions).
+- `test_platform.py`: **43 tests** (Game Registry catalog queries, 5 playable games filter, category filters, substring search, card cycling, details modal, launch/return lifecycle, hotkey quick launches [1]-[5], 23 Matches UI interaction and keypad shortcuts, Lunar Lander telemetry, M flight manual toggle, Oregon Trail journey travel, pace/rations cycling, store purchasing, Super Star Trek tactical cockpit, navigation, sensors, and restart).
+
+### Run Automated Headless Visual UI Verification
+```powershell
+.venv\Scripts\python.exe verify_ui.py
+```
+Generates 23 verified screenshots in `docs/screenshots/` covering the platform library, game details modal, 23 Matches gameplay, 23 Matches victory, Lunar Lander flight, Lunar Lander touchdown modal, Lunar Lander crash crater, The Oregon Trail journey, river crossing, store trading post, trail victory, Super Star Trek tactical bridge, LRS reconnaissance scan, phaser combat, Starfleet victory scorecard, Hammurabi screens, and multi-resolution scaling ($1366\times768$ and $1920\times1080$).
 - 	est_platform.py: **35 tests** (Game Registry catalog queries, 4 playable games filter, category filters, substring search, card cycling, details modal, launch/return lifecycle, 23 Matches UI interaction and keypad shortcuts, Lunar Lander telemetry, M flight manual toggle, Oregon Trail journey travel, pace/rations cycling, store purchasing, restart).
 
 ### Run Automated Headless Visual UI Verification
@@ -189,6 +224,8 @@ Generates 15 verified screenshots in `docs/screenshots/` covering the platform l
 - `[1]`: Quick-launch Hammurabi
 - `[2]`: Quick-launch 23 Matches
 - `[3]`: Quick-launch Lunar Lander
+- `[4]`: Quick-launch The Oregon Trail
+- `[5]`: Quick-launch Super Star Trek
 - `[←] / [→]`: Cycle selected game card
 - `[Enter] / [Space]`: Launch selected game (or open details if coming soon)
 - `[D]`: Open Game Details modal
@@ -217,15 +254,28 @@ Generates 15 verified screenshots in `docs/screenshots/` covering the platform l
 - `[Esc]` / Click `← LIBRARY`: Return to RetroRevive Game Library
 
 ### The Oregon Trail Controls
-- [Space] / [Enter] / Click CONTINUE ON TRAIL: Advance journey 4 days along the trail
-- [T] / Click REST (3 DAYS): Halt wagon to recuperate health and treat sickness
-- [H] / Click HUNT GAME: Spend ammunition to hunt prairie wild game for fresh meat
-- [P] / Click PACE: Cycle wagon pace (Steady, Strenuous, Grueling)
-- [R] / Click RATIONS: Cycle food rations (Filling, Meager, Bare Bones)
-- [S] / Click VISIT STORE: Access outpost trading post when at fort or town
-- [L] / Click TRAIL LOG: Review pioneer expedition chronicle
-- [F1] / [M] / Click TRAIL GUIDE: Open pioneer survival manual
-- [Esc] / Click ← LIBRARY: Return to RetroRevive Game Library
+- `[Space]` / `[Enter]` / Click `CONTINUE ON TRAIL`: Advance journey 4 days along the trail
+- `[T]` / Click `REST (3 DAYS)`: Halt wagon to recuperate health and treat sickness
+- `[H]` / Click `HUNT GAME`: Spend ammunition to hunt prairie wild game for fresh meat
+- `[P]` / Click `PACE`: Cycle wagon pace (Steady, Strenuous, Grueling)
+- `[R]` / Click `RATIONS`: Cycle food rations (Filling, Meager, Bare Bones)
+- `[S]` / Click `VISIT STORE`: Access outpost trading post when at fort or town
+- `[L]` / Click `TRAIL LOG`: Review pioneer expedition chronicle
+- `[F1]` / `[M]` / Click `TRAIL GUIDE`: Open pioneer survival manual
+- `[Esc]` / Click `← LIBRARY`: Return to RetroRevive Game Library
+
+### Super Star Trek Controls
+- `[1]`–`[8]` (Compass Buttons): Select course direction ($1=\text{East}, 3=\text{North}, 5=\text{West}, 7=\text{South}$)
+- `[IMP]`, `[W1]`, `[W2]`, `[W4]`, `[W8]`: Select warp speed factor
+- `[Space]` / `[Enter]` / Click `ENGAGE WARP`: Execute course navigation
+- `[P]` / Click `PHASERS`: Discharge directed energy banks across Klingon targets
+- `[T]` / Click `TORPEDO`: Launch ray-traced photon torpedo along active heading
+- `[S]` / Click `SHIELDS`: Transfer energy between main reserves and deflector shields
+- `[L]` / Click `LRS SCAN`: Probe adjacent 3×3 quadrants with Long-Range Sensors
+- `[D]` / Click `DOCK BASE`: Dock at adjacent Federation Starbase for full resupply & repairs
+- `[M]` / Click `ORDERS`: View Starfleet Command tactical briefing & rules
+- `[C]` / Click `SHIP LOG`: Open Captain's mission log
+- `[Esc]` / Click `← LIBRARY`: Return to RetroRevive Game Library
 
 ---
 

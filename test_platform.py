@@ -8,7 +8,16 @@ import unittest
 import pygame
 
 from game_registry import CATALOG, GameCategory, GameMetadata, GameRegistry, GameStatus
-from games import lander_app, lander_engine, matches_app, matches_engine, oregon_app, oregon_engine
+from games import (
+    lander_app,
+    lander_engine,
+    matches_app,
+    matches_engine,
+    oregon_app,
+    oregon_engine,
+    trek_app,
+    trek_engine,
+)
 from retrorevive import RetroReviveHub
 from ui_pygame import GameApp
 from ui_theme import SoundSynthesizer
@@ -32,12 +41,13 @@ class TestGameRegistry(unittest.TestCase):
 
     def test_playable_filter(self) -> None:
         playable = self.registry.list_playable()
-        self.assertEqual(len(playable), 4)
+        self.assertEqual(len(playable), 5)
         p_ids = [g.game_id for g in playable]
         self.assertIn("hammurabi", p_ids)
         self.assertIn("23_matches", p_ids)
         self.assertIn("lunar_lander", p_ids)
         self.assertIn("oregon_trail", p_ids)
+        self.assertIn("super_star_trek", p_ids)
 
     def test_category_filtering(self) -> None:
         strategy = self.registry.filter_by_category(GameCategory.STRATEGY_SIMULATION)
@@ -215,6 +225,15 @@ class TestGameLaunchAndReturn(unittest.TestCase):
         self.hub.active_subapp._on_back_clicked()
         self.assertIsNone(self.hub.active_subapp)
 
+    def test_launch_super_star_trek_and_return(self) -> None:
+        self.hub.launch_game("super_star_trek")
+        self.assertIsNotNone(self.hub.active_subapp)
+        self.assertIsInstance(self.hub.active_subapp, trek_app.TrekApp)
+
+        # Subapp back button returns to hub
+        self.hub.active_subapp._on_back_clicked()
+        self.assertIsNone(self.hub.active_subapp)
+
     def test_numeric_hotkeys_quick_launch(self) -> None:
         # Key '1' launches Hammurabi
         ev_1 = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_1})
@@ -244,6 +263,14 @@ class TestGameLaunchAndReturn(unittest.TestCase):
         ev_4 = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_4})
         self.hub.handle_event(ev_4)
         self.assertIsInstance(self.hub.active_subapp, oregon_app.OregonApp)
+
+        self.hub._return_to_hub()
+        self.assertIsNone(self.hub.active_subapp)
+
+        # Key '5' launches Super Star Trek
+        ev_5 = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_5})
+        self.hub.handle_event(ev_5)
+        self.assertIsInstance(self.hub.active_subapp, trek_app.TrekApp)
 
         self.hub._return_to_hub()
         self.assertIsNone(self.hub.active_subapp)
@@ -483,6 +510,77 @@ class TestOregonAppUI(unittest.TestCase):
         self.assertEqual(self.app.state.miles_traveled, 0.0)
         self.assertEqual(self.app.state.current_date.month, 4)
         self.assertEqual(self.app.state.current_date.day, 15)
+        self.assertFalse(self.app.state.is_game_over)
+
+
+class TestTrekAppUI(unittest.TestCase):
+    """Verifies Super Star Trek graphical UI cockpit, navigation, sensors, and modals."""
+
+    def setUp(self) -> None:
+        pygame.init()
+        SoundSynthesizer.set_enabled(False)
+        self.app = trek_app.TrekApp()
+
+    def test_initial_app_state(self) -> None:
+        self.assertEqual(self.app.state.energy, 3000.0)
+        self.assertEqual(self.app.state.torpedoes, 10)
+        self.assertEqual(self.app.state.shields, 500.0)
+        self.assertFalse(self.app.show_rules_modal)
+        self.assertFalse(self.app.show_log_modal)
+        self.assertFalse(self.app.state.is_game_over)
+
+    def test_course_and_warp_selection(self) -> None:
+        self.app._set_course(3.0)
+        self.assertEqual(self.app.current_course, 3.0)
+        self.assertEqual(self.app._heading_name(3.0), "North")
+
+        self.app._set_warp(2.0)
+        self.assertEqual(self.app.current_warp, 2.0)
+
+    def test_fast_nav_execution(self) -> None:
+        initial_energy = self.app.state.energy
+        self.app._set_course(1.0)
+        self.app._set_warp(0.5)
+        self.app._execute_fast_nav()
+        self.assertLess(self.app.state.energy, initial_energy)
+
+    def test_modals_toggle(self) -> None:
+        # Rules modal
+        self.assertFalse(self.app.show_rules_modal)
+        self.app._toggle_rules()
+        self.assertTrue(self.app.show_rules_modal)
+        self.app._toggle_rules()
+        self.assertFalse(self.app.show_rules_modal)
+
+        # Log modal
+        self.assertFalse(self.app.show_log_modal)
+        self.app._toggle_log()
+        self.assertTrue(self.app.show_log_modal)
+        self.app._toggle_log()
+        self.assertFalse(self.app.show_log_modal)
+
+    def test_long_range_sensor_scan(self) -> None:
+        qx = self.app.state.quadrant_x
+        qy = self.app.state.quadrant_y
+        self.app._trigger_lrs()
+        self.assertTrue(self.app.state.galaxy[qy][qx].scanned)
+
+    def test_dock_button_handling(self) -> None:
+        # If not adjacent, dock action notifies toast without crashing
+        self.app._action_dock()
+        self.assertIsNotNone(self.app.toast_message)
+        self.assertTrue(len(self.app.toast_message) > 0)
+
+    def test_restart_mission(self) -> None:
+        self.app._set_course(5.0)
+        self.app._set_warp(1.0)
+        self.app._execute_fast_nav()
+
+        self.app._restart_mission()
+        self.assertEqual(self.app.state.energy, 3000.0)
+        self.assertEqual(self.app.state.torpedoes, 10)
+        self.assertEqual(self.app.state.shields, 500.0)
+        self.assertEqual(self.app.state.stardate, 3000.0)
         self.assertFalse(self.app.state.is_game_over)
 
 
