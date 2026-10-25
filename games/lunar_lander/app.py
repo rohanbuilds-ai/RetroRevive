@@ -14,7 +14,7 @@ from typing import Callable, List, Optional, Tuple
 
 import pygame
 
-from ui_theme import FontManager, Palette, SoundSynthesizer, UIButton, UIModal
+from ui_theme import CRTEffect, FontManager, Palette, SoundSynthesizer, UIButton, UIModal
 from .engine import (
     DEFAULT_MASS,
     DRY_MASS,
@@ -30,6 +30,36 @@ from .engine import (
 
 BASE_WIDTH = 1280
 BASE_HEIGHT = 720
+
+
+class LunarDustParticle:
+    """Regolith dust cloud particle billowing across the lunar surface."""
+
+    def __init__(self, x: float, y: float, direction: float = 0.0) -> None:
+        self.x = x + random.uniform(-10, 10)
+        self.y = y + random.uniform(-3, 3)
+        spread = random.uniform(25, 90) * (direction if direction != 0 else random.choice([-1, 1]))
+        self.vx = spread
+        self.vy = random.uniform(-15, -4)
+        self.life = random.uniform(0.5, 1.1)
+        self.max_life = self.life
+        self.size = random.uniform(4.0, 10.0)
+
+    def update(self, dt: float) -> bool:
+        self.life -= dt
+        self.x += self.vx * dt
+        self.y += self.vy * dt
+        self.size += dt * 6.0  # expands as it billows
+        return self.life > 0
+
+    def draw(self, surface: pygame.Surface) -> None:
+        if self.life <= 0:
+            return
+        alpha = int(90 * (self.life / self.max_life))
+        color = (140, 138, 145, alpha)
+        surf = pygame.Surface((int(self.size * 2), int(self.size * 2)), pygame.SRCALPHA)
+        pygame.draw.circle(surf, color, (int(self.size), int(self.size)), int(self.size))
+        surface.blit(surf, (int(self.x - self.size), int(self.y - self.size)))
 
 
 class StarParticle:
@@ -127,6 +157,7 @@ class LanderApp:
         self.stars: List[StarParticle] = []
         self._init_stars()
         self.exhaust_particles: List[ExhaustFlame] = []
+        self.dust_particles: List[LunarDustParticle] = []
         self.is_thrusting: bool = False
         self.thrust_anim_timer: float = 0.0
 
@@ -208,6 +239,7 @@ class LanderApp:
         self.display_velocity = self.state.velocity
         self.display_fuel = self.state.fuel_remaining
         self.exhaust_particles.clear()
+        self.dust_particles.clear()
         SoundSynthesizer.play("fanfare")
 
     def _on_back_clicked(self) -> None:
@@ -234,18 +266,23 @@ class LanderApp:
         if self.current_burn_input > 0:
             self.is_thrusting = True
             self.thrust_anim_timer = 0.6
-            SoundSynthesizer.play("harvest")  # engine roar tone
+            SoundSynthesizer.play("thrust")
         else:
             SoundSynthesizer.play("click")
 
         # Execute authoritative simulation step
         self.state = step_burn(self.state, self.current_burn_input)
 
+        if self.state.fuel_remaining < 200 and not self.state.is_terminal:
+            SoundSynthesizer.play("warning")
+
         if self.state.is_terminal:
+            for _ in range(35):
+                self.dust_particles.append(LunarDustParticle(460, 556))
             if self.state.outcome in ("PERFECT", "GOOD"):
-                SoundSynthesizer.play("fanfare")
+                SoundSynthesizer.play("victory")
             else:
-                SoundSynthesizer.play("warning")
+                SoundSynthesizer.play("defeat")
 
     def handle_event(self, event: pygame.event.Event) -> None:
         raw_pos = getattr(event, "pos", pygame.mouse.get_pos())
@@ -304,7 +341,13 @@ class LanderApp:
 
         # Keyboard shortcuts
         if event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER):
+            if event.key == pygame.K_F2:
+                CRTEffect.toggle()
+                return
+            elif event.key == pygame.K_F3:
+                SoundSynthesizer.set_enabled(not SoundSynthesizer._enabled)
+                return
+            elif event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER):
                 self._execute_burn()
             elif event.key in (pygame.K_0, pygame.K_KP0):
                 self._set_burn(0.0)
@@ -354,9 +397,14 @@ class LanderApp:
                 self.exhaust_particles.append(
                     ExhaustFlame(lem_x, lem_y + 32, intensity=self.current_burn_input)
                 )
+            # Low altitude regolith dust billow
+            if self.state.altitude < 12.0:
+                for _ in range(3):
+                    self.dust_particles.append(LunarDustParticle(460.0, 556.0))
 
         # Update particles
         self.exhaust_particles = [p for p in self.exhaust_particles if p.update(dt)]
+        self.dust_particles = [p for p in self.dust_particles if p.update(dt)]
 
     def _get_lem_pixel_pos(self) -> Tuple[float, float]:
         """Maps simulation altitude (0 to 120 miles) to canvas viewport (x=460, y=140 to 520)."""
@@ -399,6 +447,10 @@ class LanderApp:
 
         # 3. Exhaust Flame Particles
         for p in self.exhaust_particles:
+            p.draw(self.canvas)
+
+        # Regolith Dust Clouds
+        for p in self.dust_particles:
             p.draw(self.canvas)
 
         # 4. Apollo Lunar Module (LEM) Sprite
@@ -673,6 +725,7 @@ class LanderApp:
         return max(0, min(BASE_WIDTH, cx)), max(0, min(BASE_HEIGHT, cy))
 
     def _present(self) -> None:
+        CRTEffect.apply(self.canvas)
         win_w, win_h = self.screen_width, self.screen_height
         scale = min(win_w / BASE_WIDTH, win_h / BASE_HEIGHT)
         scaled_w = int(BASE_WIDTH * scale)

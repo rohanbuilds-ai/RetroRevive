@@ -6,15 +6,16 @@
 RetroRevive brings classic computer games from the 1970s into the modern era through polished desktop graphics, animation, responsive controls, interactive tutorials, and optional modern enhancements—while strictly preserving original gameplay in verified Classic Modes.
 
 Built as an extensible platform, RetroRevive currently features:
-1. **Central Graphical Game Library (`retrorevive.py`):** An arcade/retro-styled desktop hub featuring game catalog cards, category filters, real-time search, detail modals, and seamless launch/return routing.
+1. **Central Graphical Game Library (`retrorevive.py`):** An arcade/retro-styled desktop hub featuring authentic 2×3 game catalog cards, dynamic category filters, real-time search, detail modals, CRT monitor phosphor scanlines, procedural 8-bit sound synthesis, and seamless launch/return routing.
 2. **Hammurabi: Reimagined (`ui_pygame.py`):** The iconic 1978 Sumerian kingdom simulation featuring an animated Mesopotamian landscape, Euphrates river, Ziggurat of Ur, Decree Preview ledger, Royal Advisors, and Scenarios.
-3. **23 Matches (`games/23_matches/`):** The timeless mathematical subtraction strategy game (Nim) by Bob Albrecht, featuring an animated wooden matchstick board, burning match effects, human-vs-computer play, and dual AI modes.
-4. **Lunar Lander (`games/lunar_lander/`):** Jim Storer's 1969/1978 Apollo 11 lunar excursion module (LEM) descent simulation featuring 5th-order Taylor series rocket physics, animated LEM with gimbaling thrusters, particle exhaust flames, comprehensive telemetry dashboard, and auto-hover assist.
-5. **The Oregon Trail (`games/oregon_trail/`):** Don Rawitsch, Bill Heinemann, and Paul Dillenberger's 1971/1978 historic 2,040-mile pioneer expedition featuring an animated covered wagon with rotating spoked wheels and walking oxen team, interactive 17-landmark route map, river crossings, hunting expeditions, distance-inflation trading posts, and profession scoring multipliers.
-6. **Super Star Trek (`games/super_star_trek/`):** Mike Mayfield, David H. Ahl, and Bob Leedom's 1971/1974/1978 galactic fleet command simulation featuring an 8×8 quadrant galaxy (4,096 sectors), directional vector navigation, directed phasers, ray-traced photon torpedoes, deflector shields, 3×3 Long-Range Sensor scans, Starbase docking, and subsystem damage modeling.
-7. **Hunt the Wumpus (`games/hunt_the_wumpus/`):** Gregory Yob's 1973/1978 non-Euclidean cavern strategy adventure featuring a 20-vertex regular dodecahedral graph, sensory proximity cues ("I smell a Wumpus!", "I feel a draft.", "Bats nearby!"), lethal bottomless pits, snatch-bats, and crooked arrows with ricochet physics.
-8. **Coming Soon Index:** Metadata, provenance, and rules for upcoming classics: *Colossal Cave Adventure* (1976).
-9. **Standalone Terminal CLI Fallback (`main.py --cli`):** Zero-dependency pure standard library CLI for running all playable games in traditional text terminals.
+3. **23 Matches (`games/23_matches/`):** The timeless mathematical subtraction strategy game (Nim) by Bob Albrecht, featuring an animated wooden matchstick board, ember sparks, burning match effects, human-vs-computer play, and dual AI modes.
+4. **Lunar Lander (`games/lunar_lander/`):** Jim Storer's 1969/1978 Apollo 11 lunar excursion module (LEM) descent simulation featuring 5th-order Taylor series rocket physics, animated LEM with gimbaling thrusters, particle exhaust flames, low-altitude regolith dust clouds, comprehensive telemetry dashboard, and auto-hover assist.
+5. **The Oregon Trail (`games/oregon_trail/`):** Don Rawitsch, Bill Heinemann, and Paul Dillenberger's 1971/1978 historic 2,040-mile pioneer expedition featuring an animated covered wagon with rotating spoked wheels and walking oxen team, dynamic weather overlays (rainfall, blizzards, heat shimmer), interactive 17-landmark route map, river crossings, hunting expeditions, distance-inflation trading posts, and profession scoring multipliers.
+6. **Super Star Trek (`games/super_star_trek/`):** Mike Mayfield, David H. Ahl, and Bob Leedom's 1971/1974/1978 galactic fleet command simulation featuring an 8×8 quadrant galaxy (4,096 sectors), directional vector navigation, twin directed phaser beams, ray-traced photon torpedoes, red alert tactical pulse, deflector shields, 3×3 Long-Range Sensor scans, Starbase docking, and subsystem damage modeling.
+7. **Hunt the Wumpus (`games/hunt_the_wumpus/`):** Gregory Yob's 1973/1978 non-Euclidean cavern strategy adventure featuring a 20-vertex regular dodecahedral graph, dynamic flickering torchlight wall warmth, animated crooked arrow flight trajectories, sensory proximity cues ("I smell a Wumpus!", "I feel a draft.", "Bats nearby!"), lethal bottomless pits, snatch-bats, and crooked arrows with ricochet physics.
+8. **Universal Retro Shader & Audio System:** Procedural CRT scanlines and phosphor bloom toggleable with `[F2]`, and real-time square/sine/triangle wave sound synthesizer toggleable with `[F3]`.
+9. **Coming Soon Index:** Metadata, provenance, and rules for upcoming classics: *Colossal Cave Adventure* (1976).
+10. **Standalone Terminal CLI Fallback (`main.py --cli`):** Zero-dependency pure standard library CLI for running all playable games in traditional text terminals.
 
 ---
 
@@ -242,6 +243,8 @@ Generates 26 verified screenshots in `docs/screenshots/` covering the platform l
 - `[4]`: Quick-launch The Oregon Trail
 - `[5]`: Quick-launch Super Star Trek
 - `[6]`: Quick-launch Hunt the Wumpus
+- `[F2]`: Toggle CRT Monitor Scanlines & Phosphor Bloom filter (universal across all screens)
+- `[F3]`: Toggle 8-bit Sound Synthesizer Audio (universal across all screens)
 - `[←] / [→]`: Cycle selected game card
 - `[Enter] / [Space]`: Launch selected game (or open details if coming soon)
 - `[D]`: Open Game Details modal

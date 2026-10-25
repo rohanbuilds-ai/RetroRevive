@@ -19,7 +19,7 @@ from typing import Callable, List, Optional, Tuple
 import pygame
 
 from games.hunt_the_wumpus import engine
-from ui_theme import FontManager, Palette, SoundSynthesizer, UIButton
+from ui_theme import CRTEffect, FontManager, Palette, SoundSynthesizer, UIButton
 
 
 BASE_WIDTH = 1280
@@ -99,6 +99,8 @@ class WumpusApp:
         # Core Game State
         self.state: engine.WumpusState = engine.init_game()
         self.selected_arrow_path: List[int] = []
+        self.arrow_anim_timer: float = 0.0
+        self.arrow_anim_path: List[int] = []
 
         # Visual / Modals
         self.show_rules_modal = False
@@ -157,11 +159,13 @@ class WumpusApp:
     def _restart_game(self) -> None:
         self.state = engine.init_game()
         self.selected_arrow_path.clear()
+        self.arrow_anim_timer = 0.0
+        self.arrow_anim_path.clear()
         self.show_rules_modal = False
         self.show_log_modal = False
         self.show_outcome_modal = False
-        self.show_toast(" Caverns re-generated! Good hunting, explorer.")
-        SoundSynthesizer.play("chime")
+        self.show_toast("Caverns re-generated! Good hunting, explorer.")
+        SoundSynthesizer.play("fanfare")
 
     def show_toast(self, msg: str) -> None:
         self.toast_message = msg
@@ -179,9 +183,9 @@ class WumpusApp:
                 SoundSynthesizer.play("warning")
             elif self.state.is_game_over:
                 self.show_outcome_modal = True
-                SoundSynthesizer.play("plague" if not self.state.victory else "chime")
+                SoundSynthesizer.play("victory" if self.state.victory else "defeat")
             else:
-                SoundSynthesizer.play("click")
+                SoundSynthesizer.play("thrust")
 
     def _add_room_to_arrow_path(self, room: int) -> None:
         if self.state.is_game_over:
@@ -203,18 +207,17 @@ class WumpusApp:
             self.show_toast("Select at least 1 room on the map or click adjacent rooms!")
             return
 
+        self.arrow_anim_timer = 0.65
+        self.arrow_anim_path = [self.state.hunter_room] + list(self.selected_arrow_path)
+        SoundSynthesizer.play("laser")
+
         res = engine.shoot_arrow(self.state, self.selected_arrow_path)
         self.show_toast(res.message)
         self.selected_arrow_path.clear()
 
         if self.state.is_game_over:
             self.show_outcome_modal = True
-            if self.state.victory:
-                SoundSynthesizer.play("chime")
-            else:
-                SoundSynthesizer.play("plague")
-        else:
-            SoundSynthesizer.play("coin")
+            SoundSynthesizer.play("victory" if self.state.victory else "defeat")
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.QUIT:
@@ -256,7 +259,13 @@ class WumpusApp:
 
         # Global Hotkeys
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
+            if event.key == pygame.K_F2:
+                CRTEffect.toggle()
+                return
+            elif event.key == pygame.K_F3:
+                SoundSynthesizer.set_enabled(not SoundSynthesizer._enabled)
+                return
+            elif event.key == pygame.K_ESCAPE:
                 self._on_back_clicked()
                 return
             elif event.key == pygame.K_m:
@@ -315,6 +324,9 @@ class WumpusApp:
             self.toast_timer = max(0.0, self.toast_timer - dt)
             if self.toast_timer <= 0.0:
                 self.toast_message = None
+
+        if self.arrow_anim_timer > 0.0:
+            self.arrow_anim_timer = max(0.0, self.arrow_anim_timer - dt)
 
         for torch in self.torches:
             torch.update(dt)
@@ -406,6 +418,14 @@ class WumpusApp:
         # 3 Tunnel Archway Portals
         tunnels = engine.DODECAHEDRON_ROOMS[self.state.hunter_room]
         portal_x = [chamber_rect.left + 40, chamber_rect.left + 230, chamber_rect.left + 420]
+
+        # Flickering radial torchlight warmth on wall
+        glow_pulse = 22 + int(6 * math.sin(self.anim_pulse_timer * 10.0))
+        for tx, ty in [(chamber_rect.left + 90, chamber_rect.top + 160), (chamber_rect.right - 90, chamber_rect.top + 160)]:
+            glow_surf = pygame.Surface((120, 120), pygame.SRCALPHA)
+            pygame.draw.circle(glow_surf, (255, 170, 50, glow_pulse), (60, 60), 55)
+            pygame.draw.circle(glow_surf, (255, 220, 100, glow_pulse + 12), (60, 60), 28)
+            self.canvas.blit(glow_surf, (tx - 60, ty - 60))
 
         for i, tx in enumerate(portal_x):
             p_rect = pygame.Rect(tx, chamber_rect.top + 140, 130, 160)
@@ -551,6 +571,17 @@ class WumpusApp:
 
             num_surf = FontManager.small(13).render(str(r_id), True, text_col)
             self.canvas.blit(num_surf, (cx - num_surf.get_width() // 2, cy - num_surf.get_height() // 2))
+
+        # Crooked arrow active flight tracer
+        if self.arrow_anim_timer > 0.0 and len(self.arrow_anim_path) >= 2:
+            pts = []
+            for r_id in self.arrow_anim_path:
+                rx, ry = engine.DODECAHEDRON_COORDS[r_id]
+                pts.append((g_x + int(rx * g_w), g_y + int(ry * g_h)))
+            if len(pts) >= 2:
+                pygame.draw.lines(self.canvas, (255, 230, 80), False, pts, 4)
+                pygame.draw.lines(self.canvas, (255, 255, 200), False, pts, 2)
+                pygame.draw.circle(self.canvas, (255, 255, 220), pts[-1], 6)
 
     def _draw_arrow_path_deck(self) -> None:
         """Render the bottom control bar for Crooked Arrow shooting."""
@@ -708,6 +739,7 @@ class WumpusApp:
         return int(cx), int(cy)
 
     def _present(self) -> None:
+        CRTEffect.apply(self.canvas)
         win_w, win_h = self.screen_width, self.screen_height
         scale = min(win_w / BASE_WIDTH, win_h / BASE_HEIGHT)
         scaled_w = int(BASE_WIDTH * scale)

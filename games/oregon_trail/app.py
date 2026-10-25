@@ -16,7 +16,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 import pygame
 
-from ui_theme import FontManager, Palette, SoundSynthesizer, UIButton, UIModal
+from ui_theme import CRTEffect, FontManager, Palette, SoundSynthesizer, UIButton, UIModal
 from .engine import (
     BASE_PRICES,
     LANDMARKS,
@@ -42,6 +42,42 @@ from .engine import (
 
 BASE_WIDTH = 1280
 BASE_HEIGHT = 720
+
+
+class WeatherParticle:
+    """Atmospheric particle: falling rain drop or drifting snowflake."""
+
+    def __init__(self, bounds: pygame.Rect, p_type: str = "rain") -> None:
+        self.bounds = bounds
+        self.p_type = p_type
+        self.x = random.uniform(bounds.left, bounds.right)
+        self.y = random.uniform(bounds.top, bounds.bottom)
+        if p_type == "rain":
+            self.vx = -random.uniform(40, 70)
+            self.vy = random.uniform(180, 260)
+            self.length = random.uniform(6, 12)
+        else:
+            self.vx = -random.uniform(20, 50)
+            self.vy = random.uniform(30, 60)
+            self.radius = random.uniform(1.5, 3.0)
+
+    def update(self, dt: float) -> None:
+        self.x += self.vx * dt
+        self.y += self.vy * dt
+        if self.y > self.bounds.bottom:
+            self.y = self.bounds.top
+            self.x = random.uniform(self.bounds.left, self.bounds.right)
+        elif self.x < self.bounds.left:
+            self.x = self.bounds.right
+            self.y = random.uniform(self.bounds.top, self.bounds.bottom)
+
+    def draw(self, surface: pygame.Surface) -> None:
+        if self.p_type == "rain":
+            ex = self.x + (self.vx / 30.0) * self.length
+            ey = self.y + (self.vy / 30.0) * self.length
+            pygame.draw.line(surface, (170, 200, 240), (int(self.x), int(self.y)), (int(ex), int(ey)), 1)
+        else:
+            pygame.draw.circle(surface, (240, 245, 255), (int(self.x), int(self.y)), int(self.radius))
 
 
 class CloudParticle:
@@ -110,6 +146,8 @@ class OregonApp:
 
         self.clouds: List[CloudParticle] = []
         self._init_clouds()
+        self.weather_particles: List[WeatherParticle] = []
+        self.weather_type: str = ""
 
         # UI Modals & State
         self.show_rules_modal: bool = False
@@ -445,7 +483,13 @@ class OregonApp:
 
         # Keyboard hotkeys
         if event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_SPACE, pygame.K_RETURN):
+            if event.key == pygame.K_F2:
+                CRTEffect.toggle()
+                return
+            elif event.key == pygame.K_F3:
+                SoundSynthesizer.set_enabled(not SoundSynthesizer._enabled)
+                return
+            elif event.key in (pygame.K_SPACE, pygame.K_RETURN):
                 self._action_continue()
             elif event.key == pygame.K_t:
                 self._action_rest()
@@ -498,6 +542,25 @@ class OregonApp:
         # Update clouds
         for c in self.clouds:
             c.update(dt)
+
+        # Weather precipitation particles sync
+        w = self.state.weather
+        view_rect = pygame.Rect(25, 68, 830, 240)
+        if w == Weather.RAINY:
+            if self.weather_type != "rain":
+                self.weather_type = "rain"
+                self.weather_particles = [WeatherParticle(view_rect, "rain") for _ in range(45)]
+        elif w in (Weather.BLIZZARD, Weather.COLD, Weather.VERY_COLD):
+            if self.weather_type != "snow":
+                self.weather_type = "snow"
+                self.weather_particles = [WeatherParticle(view_rect, "snow") for _ in range(35)]
+        else:
+            if self.weather_type != "":
+                self.weather_type = ""
+                self.weather_particles.clear()
+
+        for p in self.weather_particles:
+            p.update(dt)
 
         # Wagon and oxen animation
         if self.is_traveling_anim:
@@ -643,6 +706,16 @@ class OregonApp:
 
         # Trail Landmark Progress Bar (At bottom of prairie viewport)
         self._draw_trail_progress_bar(view_rect)
+
+        # Atmospheric weather precipitation overlay
+        for p in self.weather_particles:
+            p.draw(self.canvas)
+
+        # Heat shimmer for hot weather
+        if self.state.weather in (Weather.HOT, Weather.WARM):
+            heat_overlay = pygame.Surface((view_rect.width, 60), pygame.SRCALPHA)
+            heat_overlay.fill((255, 200, 80, 25))
+            self.canvas.blit(heat_overlay, (view_rect.x, view_rect.y + 120))
 
         # Border
         pygame.draw.rect(self.canvas, Palette.PANEL_BORDER, view_rect, width=2, border_radius=6)
@@ -1276,6 +1349,7 @@ class OregonApp:
         return max(0, min(BASE_WIDTH, cx)), max(0, min(BASE_HEIGHT, cy))
 
     def _present(self) -> None:
+        CRTEffect.apply(self.canvas)
         win_w, win_h = self.screen_width, self.screen_height
         scale = min(win_w / BASE_WIDTH, win_h / BASE_HEIGHT)
         scaled_w = int(BASE_WIDTH * scale)

@@ -14,7 +14,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 import pygame
 
-from ui_theme import FontManager, Palette, SoundSynthesizer, UIButton, UIModal
+from ui_theme import CRTEffect, FontManager, Palette, SoundSynthesizer, UIButton, UIModal
 from .engine import (
     GALAXY_HEIGHT,
     GALAXY_WIDTH,
@@ -248,7 +248,7 @@ class TrekApp:
             return
 
         # Fire 400 energy units
-        SoundSynthesizer.play("plague")
+        SoundSynthesizer.play("laser")
         self.weapon_anim_timer = 0.5
         self.weapon_anim_type = "PHASER"
 
@@ -269,7 +269,7 @@ class TrekApp:
             self.show_toast("All photon torpedoes expended! Dock at starbase to reload.")
             return
 
-        SoundSynthesizer.play("fanfare")
+        SoundSynthesizer.play("laser")
         self.weapon_anim_timer = 0.5
         self.weapon_anim_type = "TORPEDO"
 
@@ -394,7 +394,13 @@ class TrekApp:
 
         # Keyboard shortcuts
         if event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER):
+            if event.key == pygame.K_F2:
+                CRTEffect.toggle()
+                return
+            elif event.key == pygame.K_F3:
+                SoundSynthesizer.set_enabled(not SoundSynthesizer._enabled)
+                return
+            elif event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER):
                 self._execute_fast_nav()
             elif event.key == pygame.K_n:
                 self._open_nav()
@@ -541,6 +547,11 @@ class TrekApp:
                 elif ent == SectorEntity.STAR:
                     self._draw_star_sprite(c_rect.centerx, c_rect.centery)
 
+        # Condition Red pulsating border alert
+        if self.state.condition == ShipCondition.RED:
+            pulse = int(140 + 115 * math.sin(time.time() * 8.0))
+            pygame.draw.rect(self.canvas, (pulse, 20, 20), grid_rect, width=3, border_radius=6)
+
         # Weapon fire animation overlay
         if self.weapon_anim_timer > 0:
             ex = origin_x + self.state.sector_x * cell_size + cell_size // 2
@@ -550,13 +561,20 @@ class TrekApp:
                 for k in self.state.klingons_in_quadrant:
                     kx = origin_x + k.sector_x * cell_size + cell_size // 2
                     ky = origin_y + k.sector_y * cell_size + cell_size // 2
-                    pygame.draw.line(self.canvas, (255, 230, 80), (ex, ey), (kx, ky), 3)
+                    # Dual emitter twin beams
+                    pygame.draw.line(self.canvas, (255, 230, 80), (ex - 3, ey - 2), (kx - 2, ky - 2), 2)
+                    pygame.draw.line(self.canvas, (255, 200, 40), (ex + 3, ey + 2), (kx + 2, ky + 2), 2)
+                    # Impact bloom on Klingon
+                    pygame.draw.circle(self.canvas, (255, 240, 150), (kx, ky), 8)
             elif self.weapon_anim_type == "TORPEDO":
                 dx, dy = (math.cos((self.current_course - 1.0) * math.pi / 4.0), -math.sin((self.current_course - 1.0) * math.pi / 4.0))
                 tx = ex + int(dx * 180)
                 ty = ey + int(dy * 180)
-                pygame.draw.line(self.canvas, (240, 60, 60), (ex, ey), (tx, ty), 4)
-                pygame.draw.circle(self.canvas, (255, 200, 200), (tx, ty), 6)
+                # Fiery plasma torpedo tracer
+                pygame.draw.line(self.canvas, (255, 60, 40), (ex, ey), (tx, ty), 4)
+                pygame.draw.line(self.canvas, (255, 220, 100), (ex, ey), (tx, ty), 1)
+                pygame.draw.circle(self.canvas, (255, 100, 50), (tx, ty), 7)
+                pygame.draw.circle(self.canvas, (255, 255, 220), (tx, ty), 4)
 
     def _draw_enterprise_sprite(self, cx: int, cy: int) -> None:
         # Primary Saucer
@@ -922,6 +940,7 @@ class TrekApp:
         return max(0, min(BASE_WIDTH, cx)), max(0, min(BASE_HEIGHT, cy))
 
     def _present(self) -> None:
+        CRTEffect.apply(self.canvas)
         win_w, win_h = self.screen_width, self.screen_height
         scale = min(win_w / BASE_WIDTH, win_h / BASE_HEIGHT)
         scaled_w = int(BASE_WIDTH * scale)

@@ -14,31 +14,49 @@ import pygame
 from game_registry import CATALOG, GameCategory, GameMetadata, GameRegistry, GameStatus
 from games import lander_app, matches_app, oregon_app, trek_app, wumpus_app
 from ui_pygame import BASE_HEIGHT, BASE_WIDTH, GameApp
-from ui_theme import FontManager, Palette, SoundSynthesizer, UIButton
+from ui_theme import CRTEffect, FontManager, Palette, SoundSynthesizer, UIButton
+
+GAME_BADGES = {
+    "hammurabi": "🌾 SUMER",
+    "23_matches": "🔥 NIM",
+    "lunar_lander": "🚀 APOLLO",
+    "oregon_trail": "🐂 TRAIL",
+    "super_star_trek": "🖖 FLEET",
+    "hunt_the_wumpus": "🏹 CAVERN",
+}
 
 
 class LibraryCard:
     """Interactive visual card for a retro game in the library."""
 
-    def __init__(self, rect: Tuple[int, int, int, int], metadata: GameMetadata, on_play: Callable[[], None], on_details: Callable[[], None]) -> None:
+    def __init__(
+        self,
+        rect: Tuple[int, int, int, int],
+        metadata: GameMetadata,
+        on_play: Callable[[], None],
+        on_details: Callable[[], None],
+        index: int = 1,
+    ) -> None:
         self.rect = pygame.Rect(rect)
         self.meta = metadata
         self.on_play = on_play
         self.on_details = on_details
+        self.index = index
         self.is_hovered = False
         self.is_selected = False
 
         # Action buttons
-        btn_w = (self.rect.width - 36) // 2
-        btn_y = self.rect.bottom - 54
+        btn_w = (self.rect.width - 32) // 2
+        btn_y = self.rect.bottom - 46
+        btn_h = 34
 
         if self.meta.is_playable:
-            self.btn_play = UIButton((self.rect.x + 14, btn_y, btn_w, 38), "PLAY NOW", self.on_play, primary=True, font_size=14)
+            self.btn_play = UIButton((self.rect.x + 12, btn_y, btn_w, btn_h), "PLAY NOW", self.on_play, primary=True, font_size=13)
         else:
-            self.btn_play = UIButton((self.rect.x + 14, btn_y, btn_w, 38), "SOON", None, font_size=14, color_scheme="sand")
+            self.btn_play = UIButton((self.rect.x + 12, btn_y, btn_w, btn_h), "SOON", None, font_size=13, color_scheme="sand")
             self.btn_play.is_enabled = False
 
-        self.btn_details = UIButton((self.rect.x + 22 + btn_w, btn_y, btn_w, 38), "DETAILS", self.on_details, font_size=14, color_scheme="lapis")
+        self.btn_details = UIButton((self.rect.x + 20 + btn_w, btn_y, btn_w, btn_h), "DETAILS", self.on_details, font_size=13, color_scheme="lapis")
 
     def handle_event(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> bool:
         self.is_hovered = self.rect.collidepoint(mouse_pos)
@@ -62,59 +80,68 @@ class LibraryCard:
         pygame.draw.rect(surface, border_col, self.rect, width=width, border_radius=12)
 
         # Status Badge Pill
-        badge_x = self.rect.x + 16
-        badge_y = self.rect.y + 14
+        badge_x = self.rect.x + 14
+        badge_y = self.rect.y + 12
         if self.meta.is_playable:
-            pill_rect = pygame.Rect(badge_x, badge_y, 115, 24)
-            pygame.draw.rect(surface, (25, 75, 40), pill_rect, border_radius=12)
-            pygame.draw.rect(surface, Palette.SUCCESS_GREEN, pill_rect, width=1, border_radius=12)
+            pill_rect = pygame.Rect(badge_x, badge_y, 90, 22)
+            pygame.draw.rect(surface, (25, 75, 40), pill_rect, border_radius=11)
+            pygame.draw.rect(surface, Palette.SUCCESS_GREEN, pill_rect, width=1, border_radius=11)
             badge_txt = FontManager.small(11).render("● PLAYABLE", True, Palette.SUCCESS_GREEN)
-            surface.blit(badge_txt, (badge_x + 14, badge_y + 5))
+            surface.blit(badge_txt, (badge_x + 9, badge_y + 4))
         else:
-            pill_rect = pygame.Rect(badge_x, badge_y, 125, 24)
-            pygame.draw.rect(surface, (60, 45, 30), pill_rect, border_radius=12)
-            pygame.draw.rect(surface, Palette.SAND_DARK, pill_rect, width=1, border_radius=12)
+            pill_rect = pygame.Rect(badge_x, badge_y, 105, 22)
+            pygame.draw.rect(surface, (60, 45, 30), pill_rect, border_radius=11)
+            pygame.draw.rect(surface, Palette.SAND_DARK, pill_rect, width=1, border_radius=11)
             badge_txt = FontManager.small(11).render("○ COMING SOON", True, Palette.SAND_LIGHT)
-            surface.blit(badge_txt, (badge_x + 10, badge_y + 5))
+            surface.blit(badge_txt, (badge_x + 9, badge_y + 4))
 
-        # Year and Category tag
-        tag_str = f"{self.meta.year} • {self.meta.category_display}"
-        tag_surf = FontManager.small(12).render(tag_str, True, Palette.TEXT_MUTED)
-        surface.blit(tag_surf, (self.rect.right - tag_surf.get_width() - 16, badge_y + 5))
+        # Hotkey badge [1] .. [6]
+        hk_offset = 96 if self.meta.is_playable else 111
+        hotkey_rect = pygame.Rect(badge_x + hk_offset, badge_y, 32, 22)
+        pygame.draw.rect(surface, (50, 36, 14), hotkey_rect, border_radius=6)
+        pygame.draw.rect(surface, Palette.GOLD_BASE, hotkey_rect, width=1, border_radius=6)
+        hk_surf = FontManager.small(11).render(f"[{self.index}]", True, Palette.GOLD_LIGHT)
+        surface.blit(hk_surf, (hotkey_rect.centerx - hk_surf.get_width() // 2, badge_y + 4))
+
+        # Thematic tag and year
+        theme_glyph = GAME_BADGES.get(self.meta.game_id, "")
+        tag_str = f"{theme_glyph} • {self.meta.year}" if theme_glyph else f"{self.meta.year}"
+        tag_surf = FontManager.small(11).render(tag_str, True, Palette.GOLD_BASE)
+        surface.blit(tag_surf, (self.rect.right - tag_surf.get_width() - 14, badge_y + 4))
 
         # Game Title
-        title_surf = FontManager.header(20).render(self.meta.title, True, Palette.GOLD_PALE)
-        surface.blit(title_surf, (self.rect.x + 16, self.rect.y + 48))
+        title_surf = FontManager.header(19).render(self.meta.title, True, Palette.GOLD_PALE)
+        surface.blit(title_surf, (self.rect.x + 14, self.rect.y + 40))
 
         # Subtitle
         sub_surf = FontManager.small(12).render(self.meta.subtitle, True, Palette.SAND_LIGHT)
-        surface.blit(sub_surf, (self.rect.x + 16, self.rect.y + 74))
+        surface.blit(sub_surf, (self.rect.x + 14, self.rect.y + 64))
 
         # Divider
-        pygame.draw.line(surface, Palette.PANEL_BORDER, (self.rect.x + 16, self.rect.y + 96), (self.rect.right - 16, self.rect.y + 96), 1)
+        pygame.draw.line(surface, Palette.PANEL_BORDER, (self.rect.x + 14, self.rect.y + 84), (self.rect.right - 14, self.rect.y + 84), 1)
 
-        # Description text (wrapped up to 4 lines)
+        # Description text (wrapped up to 3 lines)
         desc_words = self.meta.description.split()
         lines: List[str] = []
         curr_line = ""
         font = FontManager.small(12)
         for w in desc_words:
             test = curr_line + (" " if curr_line else "") + w
-            if font.size(test)[0] < self.rect.width - 32:
+            if font.size(test)[0] < self.rect.width - 28:
                 curr_line = test
             else:
                 lines.append(curr_line)
                 curr_line = w
-                if len(lines) >= 4:
+                if len(lines) >= 3:
                     break
-        if curr_line and len(lines) < 4:
+        if curr_line and len(lines) < 3:
             lines.append(curr_line)
 
-        dy = self.rect.y + 106
+        dy = self.rect.y + 92
         for line in lines:
             txt_surf = font.render(line, True, Palette.TEXT_BODY)
-            surface.blit(txt_surf, (self.rect.x + 16, dy))
-            dy += 18
+            surface.blit(txt_surf, (self.rect.x + 14, dy))
+            dy += 17
 
         # Buttons
         self.btn_play.draw(surface)
@@ -158,19 +185,25 @@ class RetroReviveHub:
         self._refresh_game_cards()
 
     def _init_header_buttons(self) -> None:
-        self.btn_audio = UIButton((BASE_WIDTH - 240, 16, 105, 36), "AUDIO: ON", self._toggle_audio, color_scheme="gold", font_size=13)
-        self.btn_quit = UIButton((BASE_WIDTH - 120, 16, 90, 36), "QUIT", self.quit, color_scheme="crimson", font_size=13)
+        self.btn_crt = UIButton((BASE_WIDTH - 370, 16, 120, 36), f"CRT: {'ON' if CRTEffect.is_enabled() else 'OFF'}", self._toggle_crt, color_scheme="lapis", font_size=13)
+        self.btn_audio = UIButton((BASE_WIDTH - 240, 16, 110, 36), "AUDIO: ON", self._toggle_audio, color_scheme="gold", font_size=13)
+        self.btn_quit = UIButton((BASE_WIDTH - 120, 16, 80, 36), "QUIT", self.quit, color_scheme="crimson", font_size=13)
 
         # Modal buttons
         self.btn_modal_launch = UIButton((BASE_WIDTH // 2 - 180, 565, 160, 44), "LAUNCH GAME", self._launch_modal_game, primary=True)
         self.btn_modal_close = UIButton((BASE_WIDTH // 2 + 20, 565, 160, 44), "BACK", self._close_modal, color_scheme="sand")
 
     def _init_category_buttons(self) -> None:
+        all_count = len(self.registry.list_all())
+        strat_count = len(self.registry.filter_by_category(GameCategory.STRATEGY_SIMULATION))
+        puz_count = len(self.registry.filter_by_category(GameCategory.PUZZLE_LOGIC))
+        space_count = len(self.registry.filter_by_category(GameCategory.ADVENTURE_SPACE))
+
         categories = [
-            (GameCategory.ALL, "ALL GAMES (5)"),
-            (GameCategory.STRATEGY_SIMULATION, "STRATEGY (3)"),
-            (GameCategory.PUZZLE_LOGIC, "PUZZLE / NIM (1)"),
-            (GameCategory.ADVENTURE_SPACE, "SPACE (1)"),
+            (GameCategory.ALL, f"ALL GAMES ({all_count})"),
+            (GameCategory.STRATEGY_SIMULATION, f"STRATEGY ({strat_count})"),
+            (GameCategory.PUZZLE_LOGIC, f"PUZZLE ({puz_count})"),
+            (GameCategory.ADVENTURE_SPACE, f"SPACE / EXPLORE ({space_count})"),
         ]
         self.cat_buttons: List[Tuple[GameCategory, UIButton]] = []
         bw = 180
@@ -185,6 +218,11 @@ class RetroReviveHub:
         self.current_category = cat
         self._refresh_game_cards()
         SoundSynthesizer.play("click")
+
+    def _toggle_crt(self) -> None:
+        enabled = CRTEffect.toggle()
+        self.btn_crt.text = f"CRT: {'ON' if enabled else 'OFF'}"
+        SoundSynthesizer.play("blip")
 
     def _toggle_audio(self) -> None:
         enabled = not SoundSynthesizer._enabled
@@ -208,22 +246,25 @@ class RetroReviveHub:
         if not games:
             return
 
-        card_w = 360
-        card_h = 240
-        start_x = 40
-        start_y = 180
+        card_w = 370
+        card_h = 222
+        start_x = 55
+        start_y = 166
+        gap_x = 28
+        gap_y = 22
         cols = 3
 
         for i, g in enumerate(games):
             row = i // cols
             col = i % cols
-            x = start_x + col * (card_w + 30)
-            y = start_y + row * (card_h + 25)
+            x = start_x + col * (card_w + gap_x)
+            y = start_y + row * (card_h + gap_y)
             card = LibraryCard(
                 (x, y, card_w, card_h),
                 g,
                 on_play=lambda meta=g: self.launch_game(meta.game_id),
                 on_details=lambda meta=g: self._open_details(meta),
+                index=i + 1,
             )
             self.cards.append(card)
 
@@ -328,6 +369,8 @@ class RetroReviveHub:
             return
 
         # Header buttons
+        if self.btn_crt.handle_event(event, canvas_mouse):
+            return
         if self.btn_audio.handle_event(event, canvas_mouse):
             return
         if self.btn_quit.handle_event(event, canvas_mouse):
@@ -364,7 +407,13 @@ class RetroReviveHub:
 
         # Keyboard Navigation Shortcuts
         if event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_1, pygame.K_KP1):
+            if event.key == pygame.K_F2:
+                self._toggle_crt()
+                return
+            elif event.key == pygame.K_F3:
+                self._toggle_audio()
+                return
+            elif event.key in (pygame.K_1, pygame.K_KP1):
                 self.launch_game("hammurabi")
             elif event.key in (pygame.K_2, pygame.K_KP2):
                 self.launch_game("23_matches")
@@ -437,6 +486,7 @@ class RetroReviveHub:
         self.canvas.blit(build_badge, (360, 58))
 
         # Header action buttons
+        self.btn_crt.draw(self.canvas)
         self.btn_audio.draw(self.canvas)
         self.btn_quit.draw(self.canvas)
 
@@ -472,7 +522,7 @@ class RetroReviveHub:
         pygame.draw.rect(self.canvas, (18, 14, 12), bot_rect)
         pygame.draw.line(self.canvas, Palette.PANEL_BORDER, (0, BASE_HEIGHT - 38), (BASE_WIDTH, BASE_HEIGHT - 38), 1)
 
-        shortcuts = "[1] Hammurabi  |  [2] 23 Matches  |  [3] Lunar Lander  |  [4] Oregon Trail  |  [5] Star Trek  |  [6] Wumpus  |  [←/→] Select  |  [Enter] Play  |  [Esc] Quit"
+        shortcuts = "[1..6] Direct Play  |  [F2] CRT Scanlines  |  [F3] Audio  |  [←/→] Select  |  [Enter] Play  |  [Esc] Quit"
         sc_surf = FontManager.small(12).render(shortcuts, True, Palette.TEXT_MUTED)
         self.canvas.blit(sc_surf, sc_surf.get_rect(center=(BASE_WIDTH // 2, BASE_HEIGHT - 19)))
 
@@ -588,6 +638,7 @@ class RetroReviveHub:
         return max(0, min(BASE_WIDTH, cx)), max(0, min(BASE_HEIGHT, cy))
 
     def _present(self) -> None:
+        CRTEffect.apply(self.canvas)
         win_w, win_h = self.screen_width, self.screen_height
         scale = min(win_w / BASE_WIDTH, win_h / BASE_HEIGHT)
         scaled_w = int(BASE_WIDTH * scale)
