@@ -170,19 +170,26 @@ CATALOG: Dict[str, GameMetadata] = {
         original_publisher="MECC (Minnesota Educational Computing Consortium)",
         category=GameCategory.STRATEGY_SIMULATION,
         category_display="Strategy & Simulation",
-        status=GameStatus.COMING_SOON,
-        modes=["1848 Historic Trail", "Trail Guide Companion"],
+        status=GameStatus.PLAYABLE,
+        modes=["1848 Pioneer Journey", "Survival Simulation & Trail Guide"],
         description=(
             "Lead a covered wagon party of pioneers from Independence, Missouri to Oregon's "
-            "Willamette Valley. Hunt for food, ford treacherous rivers, and brave harsh weather."
+            "Willamette Valley across 2,040 miles of wilderness. Manage rations, oxen, and pace, "
+            "ford dangerous rivers, hunt wild game, endure illnesses, and reach the fertile valley."
         ),
         rules_summary=(
-            "Manage oxen, food, clothing, ammunition, and medical supplies over 2,000 miles. "
-            "Survive river crossings, bandits, and cholera."
+            "Manage 5 pioneers across 17 historic trail landmarks. Balance daily pace and food rations "
+            "to maintain party health. Hunt for game when ammo permits. Negotiate rivers with fords, "
+            "caulk & float, or ferries. Score points based on surviving members, supplies, and profession multiplier."
         ),
-        historical_provenance="Created in 1971 by student teachers in Minneapolis to teach 8th-grade history; published in Creative Computing in 1978.",
-        book_source="Creative Computing Magazine (May/June 1978).",
-        tags=["History", "Survival", "Pioneers", "Coming Soon"],
+        historical_provenance=(
+            "Created in autumn 1971 by Carleton College student teachers Don Rawitsch, Bill Heinemann, "
+            "and Paul Dillenberger for an 8th-grade history class in Minneapolis, running on a CDC Cyber "
+            "timeshare mainframe via teletype. Rewritten and published in Creative Computing (May/June 1978, "
+            "pp. 132-139). Preserved in authentic 1848 historical simulation rules."
+        ),
+        book_source="Creative Computing Magazine (May/June 1978), pp. 132-139.",
+        tags=["History", "Survival", "Pioneers", "Simulation", "Classic 1978", "Playable"],
     ),
 }
 

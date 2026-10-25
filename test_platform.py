@@ -8,7 +8,7 @@ import unittest
 import pygame
 
 from game_registry import CATALOG, GameCategory, GameMetadata, GameRegistry, GameStatus
-from games import lander_app, lander_engine, matches_app, matches_engine
+from games import lander_app, lander_engine, matches_app, matches_engine, oregon_app, oregon_engine
 from retrorevive import RetroReviveHub
 from ui_pygame import GameApp
 from ui_theme import SoundSynthesizer
@@ -32,11 +32,12 @@ class TestGameRegistry(unittest.TestCase):
 
     def test_playable_filter(self) -> None:
         playable = self.registry.list_playable()
-        self.assertEqual(len(playable), 3)
+        self.assertEqual(len(playable), 4)
         p_ids = [g.game_id for g in playable]
         self.assertIn("hammurabi", p_ids)
         self.assertIn("23_matches", p_ids)
         self.assertIn("lunar_lander", p_ids)
+        self.assertIn("oregon_trail", p_ids)
 
     def test_category_filtering(self) -> None:
         strategy = self.registry.filter_by_category(GameCategory.STRATEGY_SIMULATION)
@@ -226,6 +227,14 @@ class TestGameLaunchAndReturn(unittest.TestCase):
         self.hub._return_to_hub()
         self.assertIsNone(self.hub.active_subapp)
 
+        # Key '4' launches Oregon Trail
+        ev_4 = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_4})
+        self.hub.handle_event(ev_4)
+        self.assertIsInstance(self.hub.active_subapp, oregon_app.OregonApp)
+
+        self.hub._return_to_hub()
+        self.assertIsNone(self.hub.active_subapp)
+
 
 class TestMatchesAppUI(unittest.TestCase):
     """Verifies 23 Matches graphical UI interaction and moves."""
@@ -341,6 +350,89 @@ class TestLanderAppUI(unittest.TestCase):
         self.assertEqual(self.app.state.altitude, 120.0)
         self.assertEqual(self.app.state.fuel_remaining, 16500.0)
         self.assertEqual(self.app.current_burn_input, 0.0)
+
+
+class TestOregonAppUI(unittest.TestCase):
+    """Verifies The Oregon Trail graphical UI interactions, modals, and store."""
+
+    def setUp(self) -> None:
+        pygame.init()
+        SoundSynthesizer.set_enabled(False)
+        self.app = oregon_app.OregonApp()
+
+    def test_initial_app_state(self) -> None:
+        self.assertEqual(self.app.state.miles_traveled, 0.0)
+        self.assertEqual(self.app.state.total_trail_miles, 2040.0)
+        self.assertEqual(len(self.app.state.living_members), 5)
+        self.assertEqual(self.app.state.pace.value, "STEADY")
+        self.assertEqual(self.app.state.rations.value, "FILLING")
+        self.assertFalse(self.app.state.is_game_over)
+        self.assertFalse(self.app.show_rules_modal)
+        self.assertFalse(self.app.show_store_modal)
+
+    def test_travel_advances_miles_and_date(self) -> None:
+        initial_date = self.app.state.current_date
+        self.app._action_continue()
+        self.assertGreater(self.app.state.miles_traveled, 0.0)
+        self.assertGreater(self.app.state.current_date, initial_date)
+
+    def test_pace_and_rations_cycle(self) -> None:
+        self.assertEqual(self.app.state.pace.value, "STEADY")
+        self.app._cycle_pace()
+        self.assertEqual(self.app.state.pace.value, "STRENUOUS")
+        self.assertIn("STRENUOUS", self.app.btn_pace.text)
+
+        self.assertEqual(self.app.state.rations.value, "FILLING")
+        self.app._cycle_rations()
+        self.assertEqual(self.app.state.rations.value, "MEAGER")
+        self.assertIn("MEAGER", self.app.btn_rations.text)
+
+    def test_rest_action(self) -> None:
+        self.app.state.party[0].health = 60.0
+        self.app._action_rest()
+        self.assertGreater(self.app.state.party[0].health, 60.0)
+        self.assertTrue(self.app.show_event_modal)
+
+    def test_modals_toggle(self) -> None:
+        # Rules modal
+        self.assertFalse(self.app.show_rules_modal)
+        self.app._toggle_rules()
+        self.assertTrue(self.app.show_rules_modal)
+        self.app._toggle_rules()
+        self.assertFalse(self.app.show_rules_modal)
+
+        # Log modal
+        self.assertFalse(self.app.show_log_modal)
+        self.app._toggle_log()
+        self.assertTrue(self.app.show_log_modal)
+        self.app._toggle_log()
+        self.assertFalse(self.app.show_log_modal)
+
+    def test_store_open_and_purchase_at_independence(self) -> None:
+        # At start (Independence), store is available
+        self.app._open_store()
+        self.assertTrue(self.app.show_store_modal)
+
+        initial_cash = self.app.state.inventory.cash
+        initial_food = self.app.state.inventory.food
+
+        # Add 20 lbs of food to cart
+        self.app.store_cart["food"] = 20
+        self.app._execute_store_purchase()
+
+        self.assertFalse(self.app.show_store_modal)
+        self.assertEqual(self.app.state.inventory.food, initial_food + 20)
+        self.assertLess(self.app.state.inventory.cash, initial_cash)
+
+    def test_restart_trail(self) -> None:
+        self.app._action_continue()
+        self.assertGreater(self.app.state.miles_traveled, 0.0)
+
+        self.app._restart_trail()
+        self.assertEqual(self.app.state.miles_traveled, 0.0)
+        self.assertEqual(self.app.state.current_date.month, 4)
+        self.assertEqual(self.app.state.current_date.day, 15)
+        self.assertFalse(self.app.state.is_game_over)
 
 
 if __name__ == "__main__":

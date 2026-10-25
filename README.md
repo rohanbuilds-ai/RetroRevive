@@ -10,8 +10,9 @@ Built as an extensible platform, RetroRevive currently features:
 2. **Hammurabi: Reimagined (`ui_pygame.py`):** The iconic 1978 Sumerian kingdom simulation featuring an animated Mesopotamian landscape, Euphrates river, Ziggurat of Ur, Decree Preview ledger, Royal Advisors, and Scenarios.
 3. **23 Matches (`games/23_matches/`):** The timeless mathematical subtraction strategy game (Nim) by Bob Albrecht, featuring an animated wooden matchstick board, burning match effects, human-vs-computer play, and dual AI modes.
 4. **Lunar Lander (`games/lunar_lander/`):** Jim Storer's 1969/1978 Apollo 11 lunar excursion module (LEM) descent simulation featuring 5th-order Taylor series rocket physics, animated LEM with gimbaling thrusters, particle exhaust flames, comprehensive telemetry dashboard, and auto-hover assist.
-5. **Coming Soon Index:** Metadata, provenance, and rules for upcoming classics: *Super Star Trek* (1974) and *The Oregon Trail* (1971).
-6. **Standalone Terminal CLI Fallback (`main.py --cli`):** Zero-dependency pure standard library CLI for running all three games in traditional text terminals.
+5. **The Oregon Trail (`games/oregon_trail/`):** Don Rawitsch, Bill Heinemann, and Paul Dillenberger's 1971/1978 historic 2,040-mile pioneer expedition featuring an animated covered wagon with rotating spoked wheels and walking oxen team, interactive 17-landmark route map, river crossings, hunting expeditions, distance-inflation trading posts, and profession scoring multipliers.
+6. **Coming Soon Index:** Metadata, provenance, and rules for upcoming classics: *Super Star Trek* (1974).
+7. **Standalone Terminal CLI Fallback (`main.py --cli`):** Zero-dependency pure standard library CLI for running all playable games in traditional text terminals.
 
 ---
 
@@ -56,6 +57,7 @@ pip install -r requirements-ui.txt
 - Launch Hammurabi directly: `.venv\Scripts\python.exe main.py --hammurabi`
 - Launch 23 Matches directly: `.venv\Scripts\python.exe main.py --matches`
 - Launch Lunar Lander directly: `.venv\Scripts\python.exe main.py --lander`
+- Launch The Oregon Trail directly: `.venv\Scripts\python.exe main.py --oregon`
 
 ### Launch Standalone Terminal CLI (Zero Dependencies)
 ```powershell
@@ -67,6 +69,9 @@ pip install -r requirements-ui.txt
 
 # Lunar Lander historical terminal mode:
 .venv\Scripts\python.exe main.py --lander --cli
+
+# The Oregon Trail historical terminal mode:
+.venv\Scripts\python.exe main.py --oregon --cli
 ```
 
 ---
@@ -96,6 +101,17 @@ pip install -r requirements-ui.txt
   - $10.0 - 60.0\text{ MPH}$: Craft Damage... Stranded until rescue
   - $> 60.0\text{ MPH}$: Fatal Crash... Leaves a crater $W \times 0.227\text{ feet}$ deep.
 - **Flight Features:** Interactive burn rate presets (`0`, `50`, `100`, `150`, `MAX 200`), adjustment steppers (`-25`, `-10`, `+10`, `+25`), one-click **AUTO-HOVER** equilibrium calculation, and flight telemetry dashboard.
+
+### Game 4: The Oregon Trail (1848 Pioneer Simulation)
+- **Historical Provenance:** Authored by Don Rawitsch, Bill Heinemann, and Paul Dillenberger (November 1971) on a CDC Cyber timeshare mainframe via teletype; published by MECC (1974) and in *Creative Computing* (May/June 1978, pp. 132–139).
+- **Core Mechanics:** Lead a 5-member pioneer wagon party 2,040 miles from Independence, Missouri to Oregon's Willamette Valley across 17 historic landmarks. Balance travel pace (Steady, Strenuous, Grueling) and rations (Filling, Meager, Bare Bones) to preserve party health and prevent exhaustion.
+- **Features & Decisions:**
+  - **Animated Pioneer Scene:** Covered prairie schooner with spoked wheels, walk-cycle draught oxen, parallax mountain ranges, and landmark progress bar.
+  - **River Crossing Mechanics:** Real decisions at Kansas River, Big Blue, Green River, and Snake River (Ford shallow waters, Caulk & Float deep rivers, or Pay $5.00 for guaranteed safe ferry passage).
+  - **Hunting Expeditions:** Spend ammunition to hunt prairie rabbits, pronghorn antelope, and wild buffalo for fresh meat.
+  - **Trading Economy & Inflation:** Outpost stores with distance-adjusted inflation formula: $\text{Price} = \text{Base} \times (1.0 + \frac{\text{miles}}{2040} \times 1.2)$.
+  - **Health & Disaster System:** Manage illnesses (Cholera, Dysentery, Typhoid, Measles, Fever, Snakebite), wagon repairs with spare parts (wheels, axles, tongues), and rest recuperation.
+  - **Historic Scoring:** Survivor bonuses, good health points, remaining asset value, and profession difficulty multipliers (Banker $1.0\times$, Carpenter $2.0\times$, Farmer $3.0\times$).
 
 ---
 
@@ -146,17 +162,18 @@ See [`docs/platform-architecture.md`](file:///e:/GitHub%20Projects/RetroRevive/d
 
 RetroRevive enforces rigorous test isolation across core domain engines, modern additions, UI state transitions, and platform navigation.
 
-### Run All 117 Automated Unit Tests
+### Run All 144 Automated Unit Tests
 ```powershell
 .venv\Scripts\python.exe -m unittest discover -v
 ```
-**Test Suite Breakdown (117 Tests Total):**
-- `test_game.py`: **26 tests** (Historical formulas, land prices, harvest, rat infestation, safe prompt recovery, evaluation tiers).
-- `test_modern.py`: **7 tests** (Royal Advisors, Chronicle Log, Scenarios, JSON save/resume roundtrip).
-- `test_ui.py`: **27 tests** (Letterbox scaling, Decree Preview math, numeric steppers, text entry, keyboard navigation, modal focus).
-- `games.23_matches.test_engine`: **16 tests** (Initial state, bounds checking, integer validation, Misère termination, Albrecht AI, Optimal AI, repeatable scenarios).
-- `games.lunar_lander.test_engine`: **17 tests** (Initial LEM state, burn rate validation, 5th-order Taylor series deceleration, free-fall under gravity, touchdown interpolation, 4 landing outcome tiers, crater depth formula).
-- `test_platform.py`: **24 tests** (Game Registry catalog queries, category filters, substring search, card cycling, details modal, launch/return lifecycle, 23 Matches UI interaction, Lunar Lander telemetry and controls).
+**Test Suite Breakdown (144 Tests Total):**
+- 	est_game.py: **26 tests** (Historical formulas, land prices, harvest, rat infestation, safe prompt recovery, evaluation tiers).
+- 	est_modern.py: **7 tests** (Royal Advisors, Chronicle Log, Scenarios, JSON save/resume roundtrip).
+- 	est_ui.py: **27 tests** (Letterbox scaling, Decree Preview math, numeric steppers, text entry, keyboard navigation, modal focus).
+- games.23_matches.test_engine: **16 tests** (Initial state, bounds checking, integer validation, Misère termination, Albrecht AI, Optimal AI, repeatable scenarios).
+- games.lunar_lander.test_engine: **17 tests** (Initial LEM state, burn rate validation, 5th-order Taylor series deceleration, free-fall under gravity, touchdown interpolation, 4 landing outcome tiers, crater depth formula).
+- games.oregon_trail.test_engine: **20 tests** (Pioneer party initialization, profession multipliers, travel consumption, starvation health drain, oxen loss halts, resting and illness cure, hunting minimum ammo, successful and skunked hunt meat yields, shallow ford vs deep river, ferry tolls, distance store inflation, victory score math).
+- 	est_platform.py: **31 tests** (Game Registry catalog queries, 4 playable games filter, category filters, substring search, card cycling, details modal, launch/return lifecycle, 23 Matches UI interaction, Lunar Lander telemetry and controls, Oregon Trail journey travel, pace/rations cycling, store purchasing, restart).
 
 ### Run Automated Headless Visual UI Verification
 ```powershell
@@ -198,6 +215,17 @@ Generates 15 verified screenshots in `docs/screenshots/` covering the platform l
 - `[Space]` / Click `EXECUTE 10S BURN`: Ignite thruster for 10 seconds of descent
 - `[M]`: Open Apollo 11 Flight Manual modal
 - `[Esc]` / Click `← LIBRARY`: Return to RetroRevive Game Library
+
+### The Oregon Trail Controls
+- [Space] / [Enter] / Click CONTINUE ON TRAIL: Advance journey 4 days along the trail
+- [T] / Click REST (3 DAYS): Halt wagon to recuperate health and treat sickness
+- [H] / Click HUNT GAME: Spend ammunition to hunt prairie wild game for fresh meat
+- [P] / Click PACE: Cycle wagon pace (Steady, Strenuous, Grueling)
+- [R] / Click RATIONS: Cycle food rations (Filling, Meager, Bare Bones)
+- [S] / Click VISIT STORE: Access outpost trading post when at fort or town
+- [L] / Click TRAIL LOG: Review pioneer expedition chronicle
+- [F1] / [M] / Click TRAIL GUIDE: Open pioneer survival manual
+- [Esc] / Click ← LIBRARY: Return to RetroRevive Game Library
 
 ---
 

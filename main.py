@@ -333,6 +333,11 @@ def main() -> None:
         help="Launch Lunar Lander directly",
     )
     parser.add_argument(
+        "--oregon",
+        action="store_true",
+        help="Launch The Oregon Trail directly",
+    )
+    parser.add_argument(
         "--fullscreen",
         action="store_true",
         help="Launch desktop interface in fullscreen mode",
@@ -405,6 +410,11 @@ def main() -> None:
                 app = lander_app.LanderApp(start_fullscreen=args.fullscreen)
                 app.run()
                 return
+            elif args.oregon:
+                from games import oregon_app
+                app = oregon_app.OregonApp(start_fullscreen=args.fullscreen)
+                app.run()
+                return
             elif args.hammurabi:
                 from ui_pygame import GameApp
                 app = GameApp(start_fullscreen=args.fullscreen)
@@ -428,6 +438,10 @@ def main() -> None:
     if args.lander:
         from games import lander_engine
         lander_engine.play_cli()
+        return
+    if args.oregon:
+        from games import oregon_engine
+        oregon_engine.play_cli()
         return
 
     # Standard Hammurabi Terminal CLI

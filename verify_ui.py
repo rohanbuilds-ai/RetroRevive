@@ -10,7 +10,7 @@ import os
 import pygame
 
 from game_logic import GameState
-from games import lander_app, matches_app
+from games import lander_app, matches_app, oregon_app
 import retrorevive
 from ui_pygame import BASE_HEIGHT, BASE_WIDTH, GameApp
 from ui_theme import SoundSynthesizer
@@ -95,7 +95,48 @@ def run_visual_verification() -> bool:
     print(f"Captured: {l_crash_path}")
 
     # -------------------------------------------------------------------------
-    # 4. Hammurabi Reimagined Screens
+    # 4. The Oregon Trail Interface & Modals
+    # -------------------------------------------------------------------------
+    o_app = oregon_app.OregonApp()
+    # Advance travel a couple cycles for dynamic visuals
+    o_app._action_continue()
+    o_app.update(0.1)
+    o_app.draw()
+    o_journey_path = "docs/screenshots/screenshot_oregon_trail_journey.png"
+    pygame.image.save(o_app.canvas, o_journey_path)
+    print(f"Captured: {o_journey_path}")
+
+    # Capture River Crossing Modal
+    o_app.state.pending_river = o_app.state.current_landmark
+    o_app.show_river_modal = True
+    o_app.draw()
+    o_river_path = "docs/screenshots/screenshot_oregon_trail_river.png"
+    pygame.image.save(o_app.canvas, o_river_path)
+    print(f"Captured: {o_river_path}")
+    o_app.show_river_modal = False
+    o_app.state.pending_river = None
+
+    # Capture Store Provisions Modal (at Independence)
+    o_app._open_store()
+    o_app.store_cart["food"] = 40
+    o_app.store_cart["ammunition"] = 20
+    o_app.draw()
+    o_store_path = "docs/screenshots/screenshot_oregon_trail_store.png"
+    pygame.image.save(o_app.canvas, o_store_path)
+    print(f"Captured: {o_store_path}")
+    o_app._close_store()
+
+    # Capture Willamette Valley Victory Screen
+    o_app.state.is_game_over = True
+    o_app.state.victory = True
+    o_app.state.miles_traveled = 2040.0
+    o_app.draw()
+    o_victory_path = "docs/screenshots/screenshot_oregon_trail_victory.png"
+    pygame.image.save(o_app.canvas, o_victory_path)
+    print(f"Captured: {o_victory_path}")
+
+    # -------------------------------------------------------------------------
+    # 5. Hammurabi Reimagined Screens
     # -------------------------------------------------------------------------
     app = GameApp()
 
