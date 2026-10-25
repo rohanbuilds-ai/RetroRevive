@@ -145,16 +145,36 @@ To respect historical attribution and software licensing:
 
 ---
 
+### 2.6. Hunt the Wumpus (1973/1978 Non-Euclidean Cavern Hunt)
+
+| Attribute | Verified Historical Record |
+| :--- | :--- |
+| **Original Creator** | Gregory Yob (1973) |
+| **Original Organization** | Dartmouth College / People's Computer Company (Menlo Park, CA) |
+| **Magazine Publication** | *Creative Computing*, 1975 |
+| **Microcomputer Publication** | *BASIC Computer Games: Microcomputer Edition*, ed. David H. Ahl, Creative Computing Press, 1978, pp. 178–181 |
+| **Target Verified Edition** | **1978 Creative Computing / Microsoft BASIC Edition** |
+| **Program File Name in Archives** | `wumpus.bas` / `wumpus1.bas` |
+
+#### Historical Game Mechanics & Fidelity
+- **Dodecahedron Topology:** 20 vertices (rooms), each connecting to exactly 3 adjacent rooms (30 edges total) forming a regular dodecahedral graph.
+- **Hazard Distribution:** 1 Wumpus, 2 Bottomless Pits, and 2 Super Bat colonies placed in distinct caverns.
+- **Sensory Proximity System:** First-person sensory warnings when adjacent (1 room distance):
+  - `"I smell a Wumpus!"` (Wumpus in adjacent cavern)
+  - `"I feel a draft."` (Bottomless pit nearby)
+  - `"Bats nearby!"` (Giant bat colony nearby)
+- **Super Bat Transport:** Snatches hunter and deposits them in an arbitrary random chamber elsewhere in the cave.
+- **Crooked Arrow Ballistics:** Player inputs chained flight paths (1 to 5 rooms). Arrows ricochet randomly into adjacent passages when non-connected rooms are entered.
+- **Awakening Reaction:** 75% probability of Wumpus stirring upon hearing a missed arrow, creeping into a neighboring cavern.
+- **Inventory Constraint:** Exactly 5 crooked arrows available; failure to slay the beast before arrows are exhausted results in defeat.
+
+---
+
 ## 3. Planned Catalog Expansion (Coming Soon Titles)
 
-The following classic games are indexed in `game_registry.py` and planned for future milestone resurrection:
+The following classic game is indexed in `game_registry.py` and planned for future milestone resurrection:
 
-### 3.1. Hunt the Wumpus
-- **Original Creator:** Gregory Yob (1973, Dartmouth College, People's Computer Company).
-- **Publication:** *Creative Computing* (1975); *BASIC Computer Games* (1978, pp. 178–181).
-- **Mechanics:** 20-room dodecahedron cave topology, super bats, bottomless slime pits, crooked arrow trajectories, sensory warnings ("I smell a Wumpus", "I feel a draft", "Bats nearby!").
-
-### 3.2. Colossal Cave Adventure
+### 3.1. Colossal Cave Adventure
 - **Original Creators:** Will Crowther (BBN, 1976) & Don Woods (Stanford AI Lab, 1977).
 - **Publication:** DECUS archive, early ARPANET distribution.
 - **Mechanics:** Two-word verb-noun parser, underground cave exploration, magic words ("XYZZY", "PLUGH"), treasure inventory management, dwarf encounters, and pirate thievery.

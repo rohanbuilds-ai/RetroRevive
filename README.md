@@ -12,8 +12,9 @@ Built as an extensible platform, RetroRevive currently features:
 4. **Lunar Lander (`games/lunar_lander/`):** Jim Storer's 1969/1978 Apollo 11 lunar excursion module (LEM) descent simulation featuring 5th-order Taylor series rocket physics, animated LEM with gimbaling thrusters, particle exhaust flames, comprehensive telemetry dashboard, and auto-hover assist.
 5. **The Oregon Trail (`games/oregon_trail/`):** Don Rawitsch, Bill Heinemann, and Paul Dillenberger's 1971/1978 historic 2,040-mile pioneer expedition featuring an animated covered wagon with rotating spoked wheels and walking oxen team, interactive 17-landmark route map, river crossings, hunting expeditions, distance-inflation trading posts, and profession scoring multipliers.
 6. **Super Star Trek (`games/super_star_trek/`):** Mike Mayfield, David H. Ahl, and Bob Leedom's 1971/1974/1978 galactic fleet command simulation featuring an 8×8 quadrant galaxy (4,096 sectors), directional vector navigation, directed phasers, ray-traced photon torpedoes, deflector shields, 3×3 Long-Range Sensor scans, Starbase docking, and subsystem damage modeling.
-7. **Coming Soon Index:** Metadata, provenance, and rules for upcoming classics: *Hunt the Wumpus* (1973) and *Colossal Cave Adventure* (1976).
-8. **Standalone Terminal CLI Fallback (`main.py --cli`):** Zero-dependency pure standard library CLI for running all playable games in traditional text terminals.
+7. **Hunt the Wumpus (`games/hunt_the_wumpus/`):** Gregory Yob's 1973/1978 non-Euclidean cavern strategy adventure featuring a 20-vertex regular dodecahedral graph, sensory proximity cues ("I smell a Wumpus!", "I feel a draft.", "Bats nearby!"), lethal bottomless pits, snatch-bats, and crooked arrows with ricochet physics.
+8. **Coming Soon Index:** Metadata, provenance, and rules for upcoming classics: *Colossal Cave Adventure* (1976).
+9. **Standalone Terminal CLI Fallback (`main.py --cli`):** Zero-dependency pure standard library CLI for running all playable games in traditional text terminals.
 
 ---
 
@@ -60,6 +61,7 @@ pip install -r requirements-ui.txt
 - Launch Lunar Lander directly: `.venv\Scripts\python.exe main.py --lander`
 - Launch The Oregon Trail directly: `.venv\Scripts\python.exe main.py --oregon`
 - Launch Super Star Trek directly: `.venv\Scripts\python.exe main.py --trek`
+- Launch Hunt the Wumpus directly: `.venv\Scripts\python.exe main.py --wumpus`
 
 ### Launch Standalone Terminal CLI (Zero Dependencies)
 ```powershell
@@ -77,6 +79,10 @@ pip install -r requirements-ui.txt
 
 # Super Star Trek historical terminal mode:
 .venv\Scripts\python.exe main.py --trek --cli
+
+# Hunt the Wumpus historical terminal mode:
+.venv\Scripts\python.exe main.py --wumpus --cli
+```
 ```
 
 ---
@@ -130,6 +136,16 @@ pip install -r requirements-ui.txt
   - **Starbase Docking:** Full energy, torpedo, and shield replenishment plus instant repair of 7 ship subsystems.
   - **Starfleet Efficiency Scoring:** Dynamic evaluation of Klingons destroyed, energy conservation, stardate speed, and officer ranks (Fleet Admiral to Lieutenant).
 
+### Game 6: Hunt the Wumpus (1973/1978 Non-Euclidean Cavern Hunt)
+- **Historical Provenance:** Authored by Gregory Yob (1973, People's Computer Company / Dartmouth College) and published in *Creative Computing* (1975) and *BASIC Computer Games* (1978, pp. 178–181).
+- **Core Mechanics:** Hunt the fearsome Wumpus across a 20-room subterranean cavern forming the vertices of a regular dodecahedron (each room connecting to 3 adjacent tunnels).
+- **Cavern Systems & Hazards:**
+  - **Sensory Proximity System:** First-person sensory warnings: "I smell a Wumpus!" (1 room away), "I feel a draft." (adjacent to bottomless pit), and "Bats nearby!" (super bat colony).
+  - **Lethal Hazards:** Bottomless pits cause fatal falls; super bats snatch and relocate the hunter to a random room.
+  - **Crooked Arrow Ballistics:** Chain flight paths of 1 to 5 rooms. Missing or disconnected room choices ricochet into random adjacent passages.
+  - **Wumpus Reaction:** Slay the beast with an arrow to win! But missing may stir the Wumpus (75% probability of moving to an adjacent chamber).
+  - **Dual Cavern Perspective:** Left stone archway chamber with dynamic tunnel portals + Right 2D planar Schlegel projection map with interactive arrow route planner.
+
 ---
 
 ## 4. Platform Architecture & Extensibility
@@ -158,14 +174,18 @@ RetroRevive/
 │   │   ├── engine.py           # Oregon Trail pure Python 1848 pioneer simulation
 │   │   ├── app.py              # Oregon Trail Pygame animated wagon & trail HUD
 │   │   └── test_engine.py      # Automated tests for Oregon Trail (20 tests)
-│   └── super_star_trek/
-│       ├── engine.py           # Super Star Trek pure Python 1978 galaxy engine
-│       ├── app.py              # Super Star Trek Pygame tactical radar & bridge
-│       └── test_engine.py      # Automated tests for Super Star Trek (19 tests)
+│   ├── super_star_trek/
+│   │   ├── engine.py           # Super Star Trek pure Python 1978 galaxy engine
+│   │   ├── app.py              # Super Star Trek Pygame tactical radar & bridge
+│   │   └── test_engine.py      # Automated tests for Super Star Trek (19 tests)
+│   └── hunt_the_wumpus/
+│       ├── engine.py           # Hunt the Wumpus pure Python 1978 dodecahedron engine
+│       ├── app.py              # Hunt the Wumpus Pygame cavern chamber & Schlegel chart
+│       └── test_engine.py      # Automated tests for Hunt the Wumpus (20 tests)
 ├── test_game.py                # Hammurabi core unit tests (26 tests)
 ├── test_modern.py              # Hammurabi enhanced unit tests (7 tests)
 ├── test_ui.py                  # Hammurabi UI unit tests (31 tests)
-├── test_platform.py            # Platform hub, registry, and UI integration tests (43 tests)
+├── test_platform.py            # Platform hub, registry, and UI integration tests (50 tests)
 ├── verify_ui.py                # Visual screenshot verification script
 └── docs/
     ├── platform-architecture.md# Comprehensive architecture documentation
@@ -173,6 +193,7 @@ RetroRevive/
     ├── lunar-lander-rules.md   # Mathematical derivation, physics & tiers
     ├── oregon-trail-rules.md   # 1848 route map, landmark guide, math, health equations
     ├── super-star-trek-rules.md# Galactic coordinate math, phaser formulas, torpedo ballistics
+    ├── hunt-the-wumpus-rules.md# Dodecahedron topology, sensory warnings, crooked arrows
     └── screenshots/            # Verified screenshots across resolutions
 ```
 
@@ -189,11 +210,11 @@ See [`docs/platform-architecture.md`](file:///e:/GitHub%20Projects/RetroRevive/d
 
 RetroRevive enforces rigorous test isolation across core domain engines, modern additions, UI state transitions, and platform navigation.
 
-### Run All 179 Automated Unit Tests
+### Run All 206 Automated Unit Tests
 ```powershell
 .venv\Scripts\python.exe -m unittest discover -v
 ```
-**Test Suite Breakdown (179 Tests Total):**
+**Test Suite Breakdown (206 Tests Total):**
 - `test_game.py`: **26 tests** (Historical formulas, land prices, harvest, rat infestation, safe prompt recovery, evaluation tiers).
 - `test_modern.py`: **7 tests** (Royal Advisors, Chronicle Log, Scenarios, JSON save/resume roundtrip).
 - `test_ui.py`: **31 tests** (Letterbox scaling, Decree Preview math, numeric steppers, text entry, Enter/Keypad Enter submission, Shift+Tab cycling, synthetic event safety, modal focus).
@@ -201,20 +222,14 @@ RetroRevive enforces rigorous test isolation across core domain engines, modern 
 - `games.lunar_lander.test_engine`: **17 tests** (Initial LEM state, burn rate validation, 5th-order Taylor series deceleration, free-fall under gravity, touchdown interpolation, 4 landing outcome tiers, crater depth formula).
 - `games.oregon_trail.test_engine`: **20 tests** (Pioneer party initialization, profession multipliers, travel consumption, starvation health drain, oxen loss halts, resting and illness cure, hunting minimum ammo, successful and skunked hunt meat yields, shallow ford vs deep river, ferry tolls, distance store inflation, victory score math).
 - `games.super_star_trek.test_engine`: **19 tests** (Initial galaxy state, sector entities, compass heading math, impulse/warp traversal, phaser decay, torpedo ray-tracing collision, shield transfer, starbase docking, subsystem damage/repairs, LRS sensor scan, victory/defeat conditions).
-- `test_platform.py`: **43 tests** (Game Registry catalog queries, 5 playable games filter, category filters, substring search, card cycling, details modal, launch/return lifecycle, hotkey quick launches [1]-[5], 23 Matches UI interaction and keypad shortcuts, Lunar Lander telemetry, M flight manual toggle, Oregon Trail journey travel, pace/rations cycling, store purchasing, Super Star Trek tactical cockpit, navigation, sensors, and restart).
+- `games.hunt_the_wumpus.test_engine`: **20 tests** (20-vertex dodecahedron topology, bidirectional edges, graph connectivity, hazard placement, draft/wumpus/bat sensory warnings, movement, pit death, bat transport, crooked arrow flight, ricochets, wumpus slaying, self-hit defeat, arrow exhaustion).
+- `test_platform.py`: **50 tests** (Game Registry catalog queries, 6 playable games filter, category filters, substring search, card cycling, details modal, launch/return lifecycle, hotkey quick launches [1]-[6], 23 Matches UI interaction and keypad shortcuts, Lunar Lander telemetry, M flight manual toggle, Oregon Trail journey travel, pace/rations cycling, store purchasing, Super Star Trek tactical cockpit, navigation, sensors, Hunt the Wumpus cavern chamber, Schlegel chart, crooked arrows, and restart).
 
 ### Run Automated Headless Visual UI Verification
 ```powershell
 .venv\Scripts\python.exe verify_ui.py
 ```
-Generates 23 verified screenshots in `docs/screenshots/` covering the platform library, game details modal, 23 Matches gameplay, 23 Matches victory, Lunar Lander flight, Lunar Lander touchdown modal, Lunar Lander crash crater, The Oregon Trail journey, river crossing, store trading post, trail victory, Super Star Trek tactical bridge, LRS reconnaissance scan, phaser combat, Starfleet victory scorecard, Hammurabi screens, and multi-resolution scaling ($1366\times768$ and $1920\times1080$).
-- 	est_platform.py: **35 tests** (Game Registry catalog queries, 4 playable games filter, category filters, substring search, card cycling, details modal, launch/return lifecycle, 23 Matches UI interaction and keypad shortcuts, Lunar Lander telemetry, M flight manual toggle, Oregon Trail journey travel, pace/rations cycling, store purchasing, restart).
-
-### Run Automated Headless Visual UI Verification
-```powershell
-.venv\Scripts\python.exe verify_ui.py
-```
-Generates 15 verified screenshots in `docs/screenshots/` covering the platform library, game details modal, 23 Matches gameplay, 23 Matches victory, Lunar Lander flight, Lunar Lander touchdown modal, Lunar Lander crash crater, Hammurabi screens, and multi-resolution scaling ($1366\times768$ and $1920\times1080$).
+Generates 26 verified screenshots in `docs/screenshots/` covering the platform library, game details modal, 23 Matches gameplay, 23 Matches victory, Lunar Lander flight, Lunar Lander touchdown modal, Lunar Lander crash crater, The Oregon Trail journey, river crossing, store trading post, trail victory, Super Star Trek tactical bridge, LRS reconnaissance scan, phaser combat, Starfleet victory scorecard, Hunt the Wumpus cavern chamber, crooked arrow path flight, Wumpus victory modal, Hammurabi screens, and multi-resolution scaling ($1366\times768$ and $1920\times1080$).
 
 ---
 
@@ -226,6 +241,7 @@ Generates 15 verified screenshots in `docs/screenshots/` covering the platform l
 - `[3]`: Quick-launch Lunar Lander
 - `[4]`: Quick-launch The Oregon Trail
 - `[5]`: Quick-launch Super Star Trek
+- `[6]`: Quick-launch Hunt the Wumpus
 - `[←] / [→]`: Cycle selected game card
 - `[Enter] / [Space]`: Launch selected game (or open details if coming soon)
 - `[D]`: Open Game Details modal
@@ -275,6 +291,16 @@ Generates 15 verified screenshots in `docs/screenshots/` covering the platform l
 - `[D]` / Click `DOCK BASE`: Dock at adjacent Federation Starbase for full resupply & repairs
 - `[M]` / Click `ORDERS`: View Starfleet Command tactical briefing & rules
 - `[C]` / Click `SHIP LOG`: Open Captain's mission log
+- `[Esc]` / Click `← LIBRARY`: Return to RetroRevive Game Library
+
+### Hunt the Wumpus Controls
+- `[1]`, `[2]`, `[3]` / Click `TUNNEL 1-3`: Traverse connected tunnels into adjacent chambers
+- Mouse Click on Dodecahedron Map Nodes: Chain rooms for crooked arrow trajectory (1 to 5 rooms)
+- `[Space]` / `[Enter]` / Click `SHOOT ARROW`: Loose crooked arrow along planned trajectory
+- `[C]` / Click `CLEAR PATH`: Reset planned crooked arrow flight path
+- `[M]` / Click `CAVERN RULES`: Open authentic 1978 Gregory Yob survival guide
+- `[L]` / Click `JOURNAL`: Review subterranean exploration chronicle
+- `[R]` / Click `RESTART`: Re-generate cave topology and entities
 - `[Esc]` / Click `← LIBRARY`: Return to RetroRevive Game Library
 
 ---

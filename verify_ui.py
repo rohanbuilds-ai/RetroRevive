@@ -10,7 +10,7 @@ import os
 import pygame
 
 from game_logic import GameState
-from games import lander_app, matches_app, oregon_app, trek_app
+from games import lander_app, matches_app, oregon_app, trek_app, wumpus_app
 import retrorevive
 from ui_pygame import BASE_HEIGHT, BASE_WIDTH, GameApp
 from ui_theme import SoundSynthesizer
@@ -177,7 +177,36 @@ def run_visual_verification() -> bool:
     print(f"Captured: {t_victory_path}")
 
     # -------------------------------------------------------------------------
-    # 6. Hammurabi Reimagined Screens
+    # 6. Hunt the Wumpus Cavern Chamber & Dodecahedron Map
+    # -------------------------------------------------------------------------
+    w_app = wumpus_app.WumpusApp()
+    w_app.update(0.1)
+    w_app.draw()
+    w_cavern_path = "docs/screenshots/screenshot_hunt_the_wumpus_cavern.png"
+    pygame.image.save(w_app.canvas, w_cavern_path)
+    print(f"Captured: {w_cavern_path}")
+
+    # Capture Arrow Path Planning
+    w_app._add_room_to_arrow_path(2)
+    w_app._add_room_to_arrow_path(3)
+    w_app.draw()
+    w_arrow_path = "docs/screenshots/screenshot_hunt_the_wumpus_arrow_flight.png"
+    pygame.image.save(w_app.canvas, w_arrow_path)
+    print(f"Captured: {w_arrow_path}")
+    w_app._clear_arrow_path()
+
+    # Capture Victory Outcome Modal
+    w_app.state.is_game_over = True
+    w_app.state.victory = True
+    w_app.state.game_over_reason = "AHA! YOU GOT THE WUMPUS!"
+    w_app.show_outcome_modal = True
+    w_app.draw()
+    w_victory_path = "docs/screenshots/screenshot_hunt_the_wumpus_victory.png"
+    pygame.image.save(w_app.canvas, w_victory_path)
+    print(f"Captured: {w_victory_path}")
+
+    # -------------------------------------------------------------------------
+    # 7. Hammurabi Reimagined Screens
     # -------------------------------------------------------------------------
     app = GameApp()
 

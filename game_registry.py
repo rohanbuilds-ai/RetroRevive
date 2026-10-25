@@ -197,6 +197,37 @@ CATALOG: Dict[str, GameMetadata] = {
         book_source="Creative Computing Magazine (May/June 1978), pp. 132-139.",
         tags=["History", "Survival", "Pioneers", "Simulation", "Classic 1978", "Playable"],
     ),
+    "hunt_the_wumpus": GameMetadata(
+        game_id="hunt_the_wumpus",
+        title="HUNT THE WUMPUS",
+        subtitle="The Cave of the Dodecahedron Strategy Adventure",
+        year=1973,
+        author="Gregory Yob (1973), David H. Ahl (1978)",
+        original_publisher="People's Computer Company / Creative Computing",
+        category=GameCategory.ADVENTURE_SPACE,
+        category_display="Adventure & Space",
+        status=GameStatus.PLAYABLE,
+        modes=["Classic 1978 Dodecahedron Cavern", "Sensory Warnings & Crooked Arrow Planner"],
+        description=(
+            "Navigate 20 subterranean caverns connected as a regular dodecahedron. Heed sensory "
+            "warnings ('I smell a Wumpus!', 'I feel a draft.', 'Bats nearby!'), avoid bottomless "
+            "pits and giant snatch-bats, and loose crooked arrows to slay the fearsome Wumpus "
+            "before your arrows or lives run out!"
+        ),
+        rules_summary=(
+            "20 rooms with 3 tunnels each. Hazards: 1 Wumpus, 2 Bottomless Pits, 2 Super Bats. "
+            "Smell Wumpus/feel draft/hear bats when 1 room away. Shoot crooked arrows through "
+            "1-5 connected rooms. Ricochets occur on non-connected paths. 5 arrows total."
+        ),
+        historical_provenance=(
+            "Authored by Gregory Yob in 1973 at Dartmouth College / People's Computer Company in BASIC. "
+            "Yob designed it specifically to break away from traditional Euclidean grid coordinates by "
+            "using a dodecahedral graph. Published in Creative Computing (1975) and BASIC Computer Games "
+            "(1978, pp. 178-181)."
+        ),
+        book_source="BASIC Computer Games: Microcomputer Edition (1978), pp. 178-181.",
+        tags=["Adventure", "Dodecahedron", "Wumpus", "Crooked Arrow", "Classic 1978", "Playable"],
+    ),
 }
 
 

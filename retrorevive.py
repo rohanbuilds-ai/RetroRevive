@@ -12,7 +12,7 @@ from typing import Callable, List, Optional, Tuple
 import pygame
 
 from game_registry import CATALOG, GameCategory, GameMetadata, GameRegistry, GameStatus
-from games import lander_app, matches_app, oregon_app, trek_app
+from games import lander_app, matches_app, oregon_app, trek_app, wumpus_app
 from ui_pygame import BASE_HEIGHT, BASE_WIDTH, GameApp
 from ui_theme import FontManager, Palette, SoundSynthesizer, UIButton
 
@@ -275,6 +275,11 @@ class RetroReviveHub:
                 shared_window=self.window,
                 on_exit_to_library=self._return_to_hub,
             )
+        elif game_id == "hunt_the_wumpus":
+            self.active_subapp = wumpus_app.WumpusApp(
+                shared_window=self.window,
+                on_exit_to_library=self._return_to_hub,
+            )
         else:
             # Non-playable or unknown
             return
@@ -369,6 +374,8 @@ class RetroReviveHub:
                 self.launch_game("oregon_trail")
             elif event.key in (pygame.K_5, pygame.K_KP5):
                 self.launch_game("super_star_trek")
+            elif event.key in (pygame.K_6, pygame.K_KP6):
+                self.launch_game("hunt_the_wumpus")
             elif event.key == pygame.K_s:
                 self.is_search_active = True
             elif event.key == pygame.K_LEFT:
@@ -465,7 +472,7 @@ class RetroReviveHub:
         pygame.draw.rect(self.canvas, (18, 14, 12), bot_rect)
         pygame.draw.line(self.canvas, Palette.PANEL_BORDER, (0, BASE_HEIGHT - 38), (BASE_WIDTH, BASE_HEIGHT - 38), 1)
 
-        shortcuts = "[1] Hammurabi  |  [2] 23 Matches  |  [3] Lunar Lander  |  [4] Oregon Trail  |  [5] Star Trek  |  [←/→] Select  |  [Enter] Play  |  [Esc] Quit"
+        shortcuts = "[1] Hammurabi  |  [2] 23 Matches  |  [3] Lunar Lander  |  [4] Oregon Trail  |  [5] Star Trek  |  [6] Wumpus  |  [←/→] Select  |  [Enter] Play  |  [Esc] Quit"
         sc_surf = FontManager.small(12).render(shortcuts, True, Palette.TEXT_MUTED)
         self.canvas.blit(sc_surf, sc_surf.get_rect(center=(BASE_WIDTH // 2, BASE_HEIGHT - 19)))
 

@@ -17,6 +17,8 @@ from games import (
     oregon_engine,
     trek_app,
     trek_engine,
+    wumpus_app,
+    wumpus_engine,
 )
 from retrorevive import RetroReviveHub
 from ui_pygame import GameApp
@@ -31,23 +33,25 @@ class TestGameRegistry(unittest.TestCase):
 
     def test_catalog_contains_expected_games(self) -> None:
         games = self.registry.list_all()
-        self.assertGreaterEqual(len(games), 5)
+        self.assertGreaterEqual(len(games), 6)
         ids = [g.game_id for g in games]
         self.assertIn("hammurabi", ids)
         self.assertIn("23_matches", ids)
         self.assertIn("lunar_lander", ids)
         self.assertIn("super_star_trek", ids)
         self.assertIn("oregon_trail", ids)
+        self.assertIn("hunt_the_wumpus", ids)
 
     def test_playable_filter(self) -> None:
         playable = self.registry.list_playable()
-        self.assertEqual(len(playable), 5)
+        self.assertEqual(len(playable), 6)
         p_ids = [g.game_id for g in playable]
         self.assertIn("hammurabi", p_ids)
         self.assertIn("23_matches", p_ids)
         self.assertIn("lunar_lander", p_ids)
         self.assertIn("oregon_trail", p_ids)
         self.assertIn("super_star_trek", p_ids)
+        self.assertIn("hunt_the_wumpus", p_ids)
 
     def test_category_filtering(self) -> None:
         strategy = self.registry.filter_by_category(GameCategory.STRATEGY_SIMULATION)
@@ -55,8 +59,10 @@ class TestGameRegistry(unittest.TestCase):
         self.assertIn("hammurabi", [g.game_id for g in strategy])
 
         space = self.registry.filter_by_category(GameCategory.ADVENTURE_SPACE)
-        self.assertEqual(len(space), 2)
+        self.assertEqual(len(space), 3)
         self.assertIn("lunar_lander", [g.game_id for g in space])
+        self.assertIn("super_star_trek", [g.game_id for g in space])
+        self.assertIn("hunt_the_wumpus", [g.game_id for g in space])
 
         puzzle = self.registry.filter_by_category(GameCategory.PUZZLE_LOGIC)
         self.assertEqual(len(puzzle), 1)
@@ -128,7 +134,7 @@ class TestRetroReviveHubNavigation(unittest.TestCase):
         self.hub = RetroReviveHub()
 
     def test_hub_initial_state(self) -> None:
-        self.assertEqual(len(self.hub.cards), 5)
+        self.assertEqual(len(self.hub.cards), 6)
         self.assertIsNone(self.hub.active_subapp)
         self.assertIsNone(self.hub.selected_game_for_modal)
         self.assertEqual(self.hub.selected_card_index, 0)
@@ -137,10 +143,11 @@ class TestRetroReviveHubNavigation(unittest.TestCase):
     def test_category_tab_filtering(self) -> None:
         # Filter by Space
         self.hub._set_category(GameCategory.ADVENTURE_SPACE)
-        self.assertEqual(len(self.hub.cards), 2)
+        self.assertEqual(len(self.hub.cards), 3)
         card_ids = [c.meta.game_id for c in self.hub.cards]
         self.assertIn("lunar_lander", card_ids)
         self.assertIn("super_star_trek", card_ids)
+        self.assertIn("hunt_the_wumpus", card_ids)
 
         # Filter by Puzzle
         self.hub._set_category(GameCategory.PUZZLE_LOGIC)
@@ -149,7 +156,7 @@ class TestRetroReviveHubNavigation(unittest.TestCase):
 
         # Return to All
         self.hub._set_category(GameCategory.ALL)
-        self.assertEqual(len(self.hub.cards), 5)
+        self.assertEqual(len(self.hub.cards), 6)
 
     def test_card_arrow_cycling(self) -> None:
         self.assertEqual(self.hub.selected_card_index, 0)
@@ -234,6 +241,15 @@ class TestGameLaunchAndReturn(unittest.TestCase):
         self.hub.active_subapp._on_back_clicked()
         self.assertIsNone(self.hub.active_subapp)
 
+    def test_launch_hunt_the_wumpus_and_return(self) -> None:
+        self.hub.launch_game("hunt_the_wumpus")
+        self.assertIsNotNone(self.hub.active_subapp)
+        self.assertIsInstance(self.hub.active_subapp, wumpus_app.WumpusApp)
+
+        # Subapp back button returns to hub
+        self.hub.active_subapp._on_back_clicked()
+        self.assertIsNone(self.hub.active_subapp)
+
     def test_numeric_hotkeys_quick_launch(self) -> None:
         # Key '1' launches Hammurabi
         ev_1 = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_1})
@@ -271,6 +287,14 @@ class TestGameLaunchAndReturn(unittest.TestCase):
         ev_5 = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_5})
         self.hub.handle_event(ev_5)
         self.assertIsInstance(self.hub.active_subapp, trek_app.TrekApp)
+
+        self.hub._return_to_hub()
+        self.assertIsNone(self.hub.active_subapp)
+
+        # Key '6' launches Hunt the Wumpus
+        ev_6 = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_6})
+        self.hub.handle_event(ev_6)
+        self.assertIsInstance(self.hub.active_subapp, wumpus_app.WumpusApp)
 
         self.hub._return_to_hub()
         self.assertIsNone(self.hub.active_subapp)
@@ -582,6 +606,68 @@ class TestTrekAppUI(unittest.TestCase):
         self.assertEqual(self.app.state.shields, 500.0)
         self.assertEqual(self.app.state.stardate, 3000.0)
         self.assertFalse(self.app.state.is_game_over)
+
+
+class TestWumpusAppUI(unittest.TestCase):
+    """Verifies Hunt the Wumpus graphical UI chamber, Schlegel chart, and arrow actions."""
+
+    def setUp(self) -> None:
+        pygame.init()
+        SoundSynthesizer.set_enabled(False)
+        self.app = wumpus_app.WumpusApp()
+
+    def test_initial_app_state(self) -> None:
+        self.assertEqual(self.app.state.arrows, 5)
+        self.assertFalse(self.app.state.is_game_over)
+        self.assertFalse(self.app.show_rules_modal)
+        self.assertFalse(self.app.show_log_modal)
+        self.assertEqual(len(self.app.selected_arrow_path), 0)
+
+    def test_tunnel_traversal(self) -> None:
+        initial_room = self.app.state.hunter_room
+        self.app._traverse_tunnel(0)
+        self.assertNotEqual(self.app.state.hunter_room, initial_room)
+        self.assertIn(self.app.state.hunter_room, self.app.state.visited_rooms)
+
+    def test_arrow_path_selection_and_clear(self) -> None:
+        self.assertEqual(len(self.app.selected_arrow_path), 0)
+        self.app._add_room_to_arrow_path(2)
+        self.app._add_room_to_arrow_path(3)
+        self.assertEqual(self.app.selected_arrow_path, [2, 3])
+
+        self.app._clear_arrow_path()
+        self.assertEqual(len(self.app.selected_arrow_path), 0)
+
+    def test_shoot_arrow_action(self) -> None:
+        tunnels = wumpus_engine.DODECAHEDRON_ROOMS[self.app.state.hunter_room]
+        target = tunnels[0]
+        self.app._add_room_to_arrow_path(target)
+        self.app._execute_shoot_arrow()
+        self.assertEqual(len(self.app.selected_arrow_path), 0)
+        # Either hit wumpus or missed and decremented arrows
+        self.assertTrue(self.app.state.arrows == 4 or self.app.state.is_game_over)
+
+    def test_modals_toggle(self) -> None:
+        # Rules modal
+        self.assertFalse(self.app.show_rules_modal)
+        self.app._toggle_rules()
+        self.assertTrue(self.app.show_rules_modal)
+        self.app._toggle_rules()
+        self.assertFalse(self.app.show_rules_modal)
+
+        # Log modal
+        self.assertFalse(self.app.show_log_modal)
+        self.app._toggle_log()
+        self.assertTrue(self.app.show_log_modal)
+        self.app._toggle_log()
+        self.assertFalse(self.app.show_log_modal)
+
+    def test_restart_game(self) -> None:
+        self.app._traverse_tunnel(0)
+        self.app._restart_game()
+        self.assertEqual(self.app.state.arrows, 5)
+        self.assertFalse(self.app.state.is_game_over)
+        self.assertEqual(len(self.app.selected_arrow_path), 0)
 
 
 if __name__ == "__main__":

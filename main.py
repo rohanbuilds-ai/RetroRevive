@@ -343,6 +343,11 @@ def main() -> None:
         help="Launch Super Star Trek directly",
     )
     parser.add_argument(
+        "--wumpus",
+        action="store_true",
+        help="Launch Hunt the Wumpus directly",
+    )
+    parser.add_argument(
         "--fullscreen",
         action="store_true",
         help="Launch desktop interface in fullscreen mode",
@@ -425,6 +430,11 @@ def main() -> None:
                 app = trek_app.TrekApp(start_fullscreen=args.fullscreen)
                 app.run()
                 return
+            elif args.wumpus:
+                from games import wumpus_app
+                app = wumpus_app.WumpusApp(start_fullscreen=args.fullscreen)
+                app.run()
+                return
             elif args.hammurabi:
                 from ui_pygame import GameApp
                 app = GameApp(start_fullscreen=args.fullscreen)
@@ -456,6 +466,10 @@ def main() -> None:
     if args.trek:
         from games import trek_engine
         trek_engine.play_cli()
+        return
+    if args.wumpus:
+        from games import wumpus_engine
+        wumpus_engine.play_cli()
         return
 
     # Standard Hammurabi Terminal CLI
