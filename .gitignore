@@ -14,6 +14,7 @@ __pycache__/
 checkpoint_baseline/
 checkpoint_ui_pre_fix/
 checkpoint_final_quality_upgrade/
+checkpoint_release_audit/
 *.bak
 
 # Game runtime save data

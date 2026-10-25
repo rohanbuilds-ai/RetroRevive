@@ -176,24 +176,35 @@ class GameApp:
         self.btn_save = UIButton((1020, 14, 110, 36), "SAVE", self._save_game_action, font_size=15, color_scheme="lapis")
 
     def _init_menu_buttons(self) -> None:
-        """Creates main menu buttons."""
+        """Creates main menu buttons with robust spacing and save file detection."""
         bx = (BASE_WIDTH - 380) // 2
-        start_y = 250
-        spacing = 58
+        has_save = os.path.exists("retrorevive_save.json")
 
-        self.menu_buttons = [
-            UIButton((bx, start_y, 380, 48), "PLAY CLASSIC MODE (1978)", self._start_classic_game, primary=True),
-            UIButton((bx, start_y + spacing, 380, 48), "PLAY ENHANCED MODE", self._start_enhanced_game, color_scheme="lapis"),
-            UIButton((bx, start_y + spacing * 2, 380, 48), "SCENARIO CHALLENGES", self._open_scenarios_screen, color_scheme="sand"),
-            UIButton((bx, start_y + spacing * 3, 380, 48), "HOW TO PLAY & TUTORIAL", self._open_instructions_screen, color_scheme="sand"),
-            UIButton((bx, start_y + spacing * 4, 380, 48), "SETTINGS & AUDIO", self._open_settings_modal, color_scheme="sand"),
-            UIButton((bx, start_y + spacing * 5, 380, 48), "QUIT GAME", self.quit, color_scheme="crimson"),
-        ]
-
-        # Resume button if save exists
-        if os.path.exists("retrorevive_save.json"):
-            resume_btn = UIButton((bx, start_y - 54, 380, 44), "RESUME SAVED GAME", self._resume_game_action, color_scheme="gold")
-            self.menu_buttons.insert(0, resume_btn)
+        if has_save:
+            start_y = 216
+            spacing = 49
+            btn_h = 40
+            self.menu_buttons = [
+                UIButton((bx, start_y, 380, btn_h), "PLAY CLASSIC MODE (1978)", self._start_classic_game, primary=True),
+                UIButton((bx, start_y + spacing, 380, btn_h), "PLAY ENHANCED MODE", self._start_enhanced_game, color_scheme="lapis"),
+                UIButton((bx, start_y + spacing * 2, 380, btn_h), "RESUME SAVED GAME", self._resume_game_action, color_scheme="gold"),
+                UIButton((bx, start_y + spacing * 3, 380, btn_h), "SCENARIO CHALLENGES", self._open_scenarios_screen, color_scheme="sand"),
+                UIButton((bx, start_y + spacing * 4, 380, btn_h), "HOW TO PLAY & TUTORIAL", self._open_instructions_screen, color_scheme="sand"),
+                UIButton((bx, start_y + spacing * 5, 380, btn_h), "SETTINGS & AUDIO", self._open_settings_modal, color_scheme="sand"),
+                UIButton((bx, start_y + spacing * 6, 380, btn_h), "QUIT GAME", self.quit, color_scheme="crimson"),
+            ]
+        else:
+            start_y = 230
+            spacing = 54
+            btn_h = 44
+            self.menu_buttons = [
+                UIButton((bx, start_y, 380, btn_h), "PLAY CLASSIC MODE (1978)", self._start_classic_game, primary=True),
+                UIButton((bx, start_y + spacing, 380, btn_h), "PLAY ENHANCED MODE", self._start_enhanced_game, color_scheme="lapis"),
+                UIButton((bx, start_y + spacing * 2, 380, btn_h), "SCENARIO CHALLENGES", self._open_scenarios_screen, color_scheme="sand"),
+                UIButton((bx, start_y + spacing * 3, 380, btn_h), "HOW TO PLAY & TUTORIAL", self._open_instructions_screen, color_scheme="sand"),
+                UIButton((bx, start_y + spacing * 4, 380, btn_h), "SETTINGS & AUDIO", self._open_settings_modal, color_scheme="sand"),
+                UIButton((bx, start_y + spacing * 5, 380, btn_h), "QUIT GAME", self.quit, color_scheme="crimson"),
+            ]
 
     def _on_input_changed(self, _: int) -> None:
         """Updates UI limits dynamically when inputs change without infinite recursion."""
@@ -709,24 +720,22 @@ class GameApp:
 
     def _handle_menu_events(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> None:
         if event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_1, pygame.K_KP1):
-                self._start_classic_game()
-                return
-            elif event.key in (pygame.K_2, pygame.K_KP2):
-                self._start_enhanced_game()
-                return
-            elif event.key in (pygame.K_3, pygame.K_KP3):
-                self._open_scenarios_screen()
-                return
-            elif event.key in (pygame.K_4, pygame.K_KP4):
-                self._open_instructions_screen()
-                return
-            elif event.key in (pygame.K_5, pygame.K_KP5):
-                self._open_settings_modal()
-                return
-            elif event.key in (pygame.K_6, pygame.K_KP6):
-                self.quit()
-                return
+            # Numeric keys 1-7 map directly to visible menu options
+            key_map = {
+                pygame.K_1: 0, pygame.K_KP1: 0,
+                pygame.K_2: 1, pygame.K_KP2: 1,
+                pygame.K_3: 2, pygame.K_KP3: 2,
+                pygame.K_4: 3, pygame.K_KP4: 3,
+                pygame.K_5: 4, pygame.K_KP5: 4,
+                pygame.K_6: 5, pygame.K_KP6: 5,
+                pygame.K_7: 6, pygame.K_KP7: 6,
+            }
+            if event.key in key_map:
+                idx = key_map[event.key]
+                if 0 <= idx < len(self.menu_buttons):
+                    self.selected_menu_idx = idx
+                    self.menu_buttons[idx].trigger()
+                    return
             elif event.key == pygame.K_UP:
                 self.selected_menu_idx = (self.selected_menu_idx - 1) % len(self.menu_buttons)
                 for i, btn in enumerate(self.menu_buttons):
@@ -933,30 +942,32 @@ class GameApp:
         self.world.render(self.canvas)
 
         # Dark overlay on center for menu readability
-        overlay = pygame.Surface((540, 560), pygame.SRCALPHA)
-        overlay.fill((20, 16, 12, 215))
+        overlay = pygame.Surface((540, 575), pygame.SRCALPHA)
+        overlay.fill((20, 16, 12, 220))
         ox = (BASE_WIDTH - 540) // 2
-        oy = 110
+        oy = 90
         self.canvas.blit(overlay, (ox, oy))
-        pygame.draw.rect(self.canvas, Palette.GOLD_LIGHT, (ox, oy, 540, 560), width=2, border_radius=12)
+        pygame.draw.rect(self.canvas, Palette.GOLD_LIGHT, (ox, oy, 540, 575), width=2, border_radius=12)
 
-        # Game Title
-        title_surf = FontManager.title(44).render("RETROREVIVE", True, Palette.GOLD_PALE)
-        sub_surf = FontManager.header(24).render("HAMMURABI REIMAGINED", True, Palette.SAND_LIGHT)
-        track_surf = FontManager.small(14).render("Confluence Buildathon 2026 — Track: Resurrections", True, Palette.TEXT_MUTED)
+        # Game Title & Subtitles
+        title_surf = FontManager.title(42).render("RETROREVIVE", True, Palette.GOLD_PALE)
+        sub_surf = FontManager.header(22).render("HAMMURABI REIMAGINED", True, Palette.SAND_LIGHT)
+        track_surf = FontManager.small(13).render("Confluence Buildathon 2026 — Track: Resurrections", True, Palette.TEXT_MUTED)
 
-        self.canvas.blit(title_surf, title_surf.get_rect(center=(BASE_WIDTH // 2, 145)))
-        self.canvas.blit(sub_surf, sub_surf.get_rect(center=(BASE_WIDTH // 2, 185)))
-        self.canvas.blit(track_surf, track_surf.get_rect(center=(BASE_WIDTH // 2, 215)))
+        self.canvas.blit(title_surf, title_surf.get_rect(center=(BASE_WIDTH // 2, oy + 36)))
+        self.canvas.blit(sub_surf, sub_surf.get_rect(center=(BASE_WIDTH // 2, oy + 72)))
+        self.canvas.blit(track_surf, track_surf.get_rect(center=(BASE_WIDTH // 2, oy + 98)))
 
         # Menu buttons
         for btn in self.menu_buttons:
             btn.draw(self.canvas)
 
         # Bottom divider & shortcut help
-        pygame.draw.line(self.canvas, Palette.PANEL_BORDER, (ox + 40, oy + 512), (ox + 500, oy + 512), 1)
-        hint = FontManager.small(12).render("[1-6] Quick Select  |  [↑/↓] Focus  |  [Enter] Confirm", True, Palette.TEXT_MUTED)
-        self.canvas.blit(hint, hint.get_rect(center=(BASE_WIDTH // 2, oy + 532)))
+        has_save = os.path.exists("retrorevive_save.json")
+        hint_label = "[1-7] Quick Select  |  [↑/↓] Focus  |  [Enter] Confirm" if has_save else "[1-6] Quick Select  |  [↑/↓] Focus  |  [Enter] Confirm"
+        pygame.draw.line(self.canvas, Palette.PANEL_BORDER, (ox + 40, oy + 535), (ox + 500, oy + 535), 1)
+        hint = FontManager.small(12).render(hint_label, True, Palette.TEXT_MUTED)
+        self.canvas.blit(hint, hint.get_rect(center=(BASE_WIDTH // 2, oy + 554)))
 
     def _draw_gameplay(self) -> None:
         st = self._get_current_game_state()
