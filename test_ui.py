@@ -441,6 +441,57 @@ class TestKeyboardShortcutsAndAccessibility(unittest.TestCase):
         self.app.handle_event(ev_tab)
         self.assertTrue(self.app.input_buy.is_active)
 
+        # Tab again activates input_feed (input_sell disabled when buy=0 in classic mode or vice versa)
+        self.app.handle_event(ev_tab)
+        self.assertFalse(self.app.input_buy.is_active)
+
+    def test_shift_tab_backwards_focus_cycle(self) -> None:
+        self.app._start_classic_game()
+        inputs = [self.app.input_buy, self.app.input_sell, self.app.input_feed, self.app.input_plant]
+        # Activate input_feed
+        self.app.input_feed.is_active = True
+
+        # Shift+Tab cycles backwards
+        pygame.key.get_mods = lambda: pygame.KMOD_LSHIFT
+        try:
+            ev_shift_tab = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_TAB})
+            self.app.handle_event(ev_shift_tab)
+            # Should cycle backwards to enabled predecessor (input_sell or input_buy)
+            self.assertFalse(self.app.input_feed.is_active)
+        finally:
+            pygame.key.get_mods = lambda: 0
+
+    def test_enter_submits_decree_directly_when_input_active(self) -> None:
+        self.app._start_classic_game()
+        self.app.input_buy.text_buffer = ""
+        self.app.input_buy.is_active = True
+
+        # Pressing Enter while editing must directly validate and set error without requiring a second Enter
+        ev_enter = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_RETURN})
+        self.app.handle_event(ev_enter)
+        self.assertFalse(self.app.input_buy.is_active)
+        self.assertEqual(self.app.input_buy.error_message, "?REDO FROM START: Input cannot be empty.")
+
+    def test_keypad_enter_submits_decree(self) -> None:
+        self.app._start_classic_game()
+        self.app.input_buy.text_buffer = "abc"
+        self.app.input_buy.is_active = True
+
+        # Pressing Keypad Enter must trigger execution and validation directly
+        ev_kp_enter = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_KP_ENTER})
+        self.app.handle_event(ev_kp_enter)
+        self.assertFalse(self.app.input_buy.is_active)
+        self.assertEqual(self.app.input_buy.error_message, "?REDO FROM START: 'abc' is not an integer.")
+
+    def test_synthetic_event_without_unicode_does_not_crash(self) -> None:
+        self.app._start_classic_game()
+        self.app.input_buy.is_active = True
+
+        # Event dictionary without 'unicode' key must not raise AttributeError
+        ev_no_unicode = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_UNKNOWN})
+        self.app.handle_event(ev_no_unicode)
+        self.assertTrue(self.app.input_buy.is_active)
+
     def test_gameplay_reset_hotkey(self) -> None:
         self.app._start_classic_game()
         self.app.input_feed.set_value(500)

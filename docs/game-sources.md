@@ -97,20 +97,87 @@ To respect historical attribution and software licensing:
 
 ---
 
+### 2.4. The Oregon Trail (1848 Pioneer Frontier Simulation)
+
+| Attribute | Verified Historical Record |
+| :--- | :--- |
+| **Original Creators** | Don Rawitsch, Bill Heinemann, and Paul Dillenberger (November–December 1971) |
+| **Original Organization** | Jordan Junior High School, Minneapolis / Carleton College |
+| **Original Platform** | CDC Cyber timesharing mainframe via 110-baud teletype |
+| **Consortium Distribution** | MECC (*Minnesota Educational Computing Consortium*, 1974) |
+| **Magazine Publication** | *Creative Computing* Magazine, ed. David H. Ahl, May/June 1978, pp. 132–139 |
+| **Target Verified Edition** | **1978 Creative Computing BASIC Pioneer Edition** |
+| **Program File Name in Archives** | `oregon.bas` / `oregontrail.bas` |
+
+#### Historical Game Mechanics & Fidelity
+- **Route & Milestones:** Authentic 2,040-mile journey from Independence, MO to Willamette Valley, OR across 17 historic landmarks.
+- **Pioneer Party:** 5 pioneers (leader + 4 companions) with health bars (0-100 HP), diseases (Cholera, Dysentery, Typhoid, Measles, Fever, Snakebite), and rest recuperation.
+- **Wagon Cadence:** Three paces (Steady 14 mi/day, Strenuous 18 mi/day, Grueling 22 mi/day).
+- **Nutrition:** Three ration tiers (Filling 3 lbs/day, Meager 2 lbs/day, Bare Bones 1 lb/day). Acute starvation drain when food depletes to zero.
+- **River Crossings:** Strategic options at Kansas, Big Blue, Green, and Snake rivers: Ford (depth-dependent risk), Caulk & Float (rafting), or Ferry ($5.00 safe passage).
+- **Hunting Mechanics:** Spending ammunition rounds to harvest wild rabbits, antelope, and buffalo for fresh meat.
+- **Trading Economy:** Supply outposts with distance inflation: $\text{Price} = \text{Base} \times (1.0 + \frac{\text{miles}}{2040} \times 1.2)$.
+- **Scoring System:** Evaluates surviving pioneers, physical health condition, remaining supplies, and occupation multipliers (Banker 1.0x, Carpenter 2.0x, Farmer 3.0x).
+
+---
+
+### 2.5. Super Star Trek (1978 Strategic Space Fleet Simulation)
+
+| Attribute | Verified Historical Record |
+| :--- | :--- |
+| **Original Creator** | Mike Mayfield (1971) |
+| **Original Platform** | SDS Sigma 7 minicomputer (HP 2000C BASIC) |
+| **Adaptation & Expansion** | David H. Ahl & Mary Cole (DEC BASIC-PLUS, 1973); Bob Leedom (Westinghouse, 1974) |
+| **Magazine Publication** | *Creative Computing*, July/August 1974 |
+| **Microcomputer Publication** | *BASIC Computer Games: Microcomputer Edition*, ed. David H. Ahl, Creative Computing Press, 1978, pp. 157–163 |
+| **Target Verified Edition** | **1978 Creative Computing / Microsoft BASIC Edition** |
+| **Program File Name in Archives** | `startrek.bas` / `spsttr.bas` |
+
+#### Historical Game Mechanics & Fidelity
+- **Galactic Grid Model:** 8×8 matrix of Quadrants (64 total) with historical star names (Antares, Rigel, Vega, Canopus, etc.), each containing an 8×8 sector grid (4,096 total sectors).
+- **Navigation Vector Physics:** Directional navigation courses 1.0 through 8.9 (1=East, 3=North, 5=West, 7=South) with trigonometric heading displacement and warp factor fuel burn: $E = \text{round}(8 \cdot W)$.
+- **Directed Phasers:** Inverse distance energy decay: $H_i = \text{round}\left(\frac{P / N}{D_i} \cdot (2.0 + R)\right)$ distributing energy across all hostiles.
+- **Ballistic Photon Torpedoes:** Ray-traced projectile trajectories checking step-by-step collisions with Klingons, stars, starbases, or galactic edge.
+- **Deflector Shields & Retaliation:** 2,500-unit shield envelope, dynamic 1:1 energy transfer, and retaliatory counter-fire from Klingon battlecruisers.
+- **Long-Range Sensors (LRS):** 3×3 reconnaissance scan returning authentic 3-digit $K S B$ telemetry code.
+- **Starbase Resupply & Subsystem Damage:** Docking restores 3,000 energy, 10 torpedoes, 500 shields, and repairs 7 ship systems (Warp Engines, Short Range Sensors, Long Range Sensors, Phaser Control, Photon Tubes, Shield Control, Library Computer).
+- **Mission Deadline:** Stardate countdown timer with Starfleet efficiency score evaluation and officer ranks (Fleet Admiral down to Lieutenant).
+
+---
+
+### 2.6. Hunt the Wumpus (1973/1978 Non-Euclidean Cavern Hunt)
+
+| Attribute | Verified Historical Record |
+| :--- | :--- |
+| **Original Creator** | Gregory Yob (1973) |
+| **Original Organization** | Dartmouth College / People's Computer Company (Menlo Park, CA) |
+| **Magazine Publication** | *Creative Computing*, 1975 |
+| **Microcomputer Publication** | *BASIC Computer Games: Microcomputer Edition*, ed. David H. Ahl, Creative Computing Press, 1978, pp. 178–181 |
+| **Target Verified Edition** | **1978 Creative Computing / Microsoft BASIC Edition** |
+| **Program File Name in Archives** | `wumpus.bas` / `wumpus1.bas` |
+
+#### Historical Game Mechanics & Fidelity
+- **Dodecahedron Topology:** 20 vertices (rooms), each connecting to exactly 3 adjacent rooms (30 edges total) forming a regular dodecahedral graph.
+- **Hazard Distribution:** 1 Wumpus, 2 Bottomless Pits, and 2 Super Bat colonies placed in distinct caverns.
+- **Sensory Proximity System:** First-person sensory warnings when adjacent (1 room distance):
+  - `"I smell a Wumpus!"` (Wumpus in adjacent cavern)
+  - `"I feel a draft."` (Bottomless pit nearby)
+  - `"Bats nearby!"` (Giant bat colony nearby)
+- **Super Bat Transport:** Snatches hunter and deposits them in an arbitrary random chamber elsewhere in the cave.
+- **Crooked Arrow Ballistics:** Player inputs chained flight paths (1 to 5 rooms). Arrows ricochet randomly into adjacent passages when non-connected rooms are entered.
+- **Awakening Reaction:** 75% probability of Wumpus stirring upon hearing a missed arrow, creeping into a neighboring cavern.
+- **Inventory Constraint:** Exactly 5 crooked arrows available; failure to slay the beast before arrows are exhausted results in defeat.
+
+---
+
 ## 3. Planned Catalog Expansion (Coming Soon Titles)
 
-The following games are indexed in `game_registry.py` and planned for future milestone resurrection:
+The following classic game is indexed in `game_registry.py` and planned for future milestone resurrection:
 
-### 3.1. Super Star Trek
-- **Original Creator:** Mike Mayfield (1971, SDS Sigma 7); adapted by David H. Ahl & Bob Leedom (1974).
-- **Publication:** *Creative Computing* (1974); *BASIC Computer Games* (1978, pp. 157–163).
-- **Mechanics:** 8x8 quadrant galaxy command simulation. Energy management across phasers, photon torpedoes, long-range sensors, and dockings at starbases before stardates elapse.
-
-### 3.2. The Oregon Trail
-- **Original Creators:** Don Rawitsch, Bill Heinemann, and Paul Dillenberger (1971).
-- **Original Organization:** MECC (Minnesota Educational Computing Consortium).
-- **Publication:** *Creative Computing* (May/June 1978).
-- **Mechanics:** 2,040-mile pioneer journey from Missouri to Oregon. Supply management (oxen, bullets, clothing, food) and risk mitigation across river fords and outbreaks of illness.
+### 3.1. Colossal Cave Adventure
+- **Original Creators:** Will Crowther (BBN, 1976) & Don Woods (Stanford AI Lab, 1977).
+- **Publication:** DECUS archive, early ARPANET distribution.
+- **Mechanics:** Two-word verb-noun parser, underground cave exploration, magic words ("XYZZY", "PLUGH"), treasure inventory management, dwarf encounters, and pirate thievery.
 
 ---
 

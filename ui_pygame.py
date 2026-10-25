@@ -41,6 +41,7 @@ from modern_game_logic import (
     step_enhanced_year,
 )
 from ui_theme import (
+    CRTEffect,
     DecreePreviewData,
     FontManager,
     Palette,
@@ -317,8 +318,10 @@ class GameApp:
         self._on_input_changed(0)
 
     def _on_execute_turn(self) -> None:
+        if self.current_screen != "GAMEPLAY":
+            return
         st = self._get_current_game_state()
-        if not st:
+        if not st or st.is_over:
             return
 
         # 1. Parse all 4 inputs (validating integers, empty strings, letters, decimals)
@@ -715,6 +718,15 @@ class GameApp:
         raw_pos = getattr(event, "pos", pygame.mouse.get_pos())
         canvas_mouse = self._screen_to_canvas(raw_pos)
 
+        # Global hotkeys
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F2:
+                CRTEffect.toggle()
+                return
+            elif event.key == pygame.K_F3:
+                SoundSynthesizer.set_enabled(not SoundSynthesizer._enabled)
+                return
+
         # Modal event consumption
         if self.active_modal:
             self.active_modal.handle_event(event, canvas_mouse)
@@ -762,7 +774,7 @@ class GameApp:
                     btn.is_focused = (i == self.selected_menu_idx)
                 SoundSynthesizer.play("click")
                 return
-            elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
+            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE):
                 if 0 <= self.selected_menu_idx < len(self.menu_buttons):
                     self.menu_buttons[self.selected_menu_idx].trigger()
                 return
@@ -795,25 +807,23 @@ class GameApp:
         # Keyboard shortcuts
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_TAB:
+                is_shift = bool(pygame.key.get_mods() & (pygame.KMOD_LSHIFT | pygame.KMOD_RSHIFT))
                 active_idx = -1
                 for i, inp in enumerate(inputs):
                     if inp.is_active:
                         active_idx = i
                         inp.is_active = False
+                step = -1 if is_shift else 1
                 for offset in range(1, len(inputs) + 1):
-                    cand_idx = (active_idx + offset) % len(inputs)
+                    cand_idx = (active_idx + step * offset) % len(inputs)
                     if inputs[cand_idx].is_enabled:
                         inputs[cand_idx].is_active = True
                         break
                 return
-            elif event.key == pygame.K_RETURN:
-                any_was_active = False
+            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                 for inp in inputs:
-                    if inp.is_active:
-                        inp.is_active = False
-                        any_was_active = True
-                if not any_was_active:
-                    self._on_execute_turn()
+                    inp.is_active = False
+                self._on_execute_turn()
                 return
             elif not any(inp.is_active for inp in inputs):
                 # Gameplay Hotkeys (when not actively editing numbers)
@@ -846,7 +856,7 @@ class GameApp:
 
     def _handle_game_over_events(self, event: pygame.event.Event, mouse_pos: Tuple[int, int]) -> None:
         if event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_1, pygame.K_r, pygame.K_RETURN, pygame.K_SPACE):
+            if event.key in (pygame.K_1, pygame.K_r, pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE):
                 self._start_classic_game()
                 return
             elif event.key in (pygame.K_2, pygame.K_m, pygame.K_ESCAPE):
@@ -888,7 +898,7 @@ class GameApp:
             if event.key in (pygame.K_ESCAPE, pygame.K_b):
                 self._return_to_main_menu()
                 return
-            elif event.key in (pygame.K_RIGHT, pygame.K_SPACE, pygame.K_RETURN):
+            elif event.key in (pygame.K_RIGHT, pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER):
                 if self.tutorial_step < 4:
                     self._next_tutorial_step()
                 return
@@ -943,6 +953,9 @@ class GameApp:
                 self.active_toast.draw(self.canvas)
             else:
                 self.active_toast = None
+
+        # Apply CRT Scanline and Phosphor filter if enabled
+        CRTEffect.apply(self.canvas)
 
         # Scale virtual canvas to letterboxed viewport
         vp_x, vp_y, vp_w, vp_h = self._compute_viewport()

@@ -147,19 +147,25 @@ CATALOG: Dict[str, GameMetadata] = {
         original_publisher="Creative Computing",
         category=GameCategory.ADVENTURE_SPACE,
         category_display="Adventure & Space",
-        status=GameStatus.COMING_SOON,
-        modes=["Classic Sector Grid", "Tactical Sensor Array"],
+        status=GameStatus.PLAYABLE,
+        modes=["1978 Strategic Space Combat", "Tactical Sensor Array & Starbase Operations"],
         description=(
-            "Command the USS Enterprise across an 8x8 quadrant galaxy. Hunt Klingon warships, "
-            "manage photon torpedoes, shields, and dock at starbases before stardates expire."
+            "Command the USS Enterprise across an 8x8 quadrant galaxy. Hunt down Klingon battlecruisers, "
+            "fire directional photon torpedoes and energy phasers, manage deflector shields, and dock "
+            "at Federation Starbases before your mission stardates expire."
         ),
         rules_summary=(
-            "Navigate through 64 quadrants. Balance energy between shields, phasers, and warp engines. "
-            "Neutralize all Klingon battlecruisers before time runs out."
+            "Navigate through 64 quadrants (8x8 grid) and 64 sectors per quadrant. Balance energy between "
+            "warp engines, phasers, and protective shields. Fire photon torpedoes along straight-line courses. "
+            "Dock adjacent to Starbases to repair damaged subsystems and replenish energy and torpedoes."
         ),
-        historical_provenance="Originated on SDS Sigma 7 by Mike Mayfield in 1971; expanded into Super Star Trek by David H. Ahl and Bob Leedom in 1974.",
-        book_source="BASIC Computer Games (1978), pp. 157-163.",
-        tags=["Sci-Fi", "Tactical", "Grid Command", "Coming Soon"],
+        historical_provenance=(
+            "Created on an SDS Sigma 7 by Mike Mayfield in 1971 in BASIC. David H. Ahl and Bob Leedom "
+            "expanded it into Super Star Trek in 1974. Published in Creative Computing and BASIC Computer Games "
+            "(1978, pp. 157-163). Preserves authentic quadrant/sector coordinates and device damage rules."
+        ),
+        book_source="BASIC Computer Games: Microcomputer Edition (1978), pp. 157-163.",
+        tags=["Sci-Fi", "Tactical", "Grid Command", "Playable", "Classic 1978"],
     ),
     "oregon_trail": GameMetadata(
         game_id="oregon_trail",
@@ -170,19 +176,57 @@ CATALOG: Dict[str, GameMetadata] = {
         original_publisher="MECC (Minnesota Educational Computing Consortium)",
         category=GameCategory.STRATEGY_SIMULATION,
         category_display="Strategy & Simulation",
-        status=GameStatus.COMING_SOON,
-        modes=["1848 Historic Trail", "Trail Guide Companion"],
+        status=GameStatus.PLAYABLE,
+        modes=["1848 Pioneer Journey", "Survival Simulation & Trail Guide"],
         description=(
             "Lead a covered wagon party of pioneers from Independence, Missouri to Oregon's "
-            "Willamette Valley. Hunt for food, ford treacherous rivers, and brave harsh weather."
+            "Willamette Valley across 2,040 miles of wilderness. Manage rations, oxen, and pace, "
+            "ford dangerous rivers, hunt wild game, endure illnesses, and reach the fertile valley."
         ),
         rules_summary=(
-            "Manage oxen, food, clothing, ammunition, and medical supplies over 2,000 miles. "
-            "Survive river crossings, bandits, and cholera."
+            "Manage 5 pioneers across 17 historic trail landmarks. Balance daily pace and food rations "
+            "to maintain party health. Hunt for game when ammo permits. Negotiate rivers with fords, "
+            "caulk & float, or ferries. Score points based on surviving members, supplies, and profession multiplier."
         ),
-        historical_provenance="Created in 1971 by student teachers in Minneapolis to teach 8th-grade history; published in Creative Computing in 1978.",
-        book_source="Creative Computing Magazine (May/June 1978).",
-        tags=["History", "Survival", "Pioneers", "Coming Soon"],
+        historical_provenance=(
+            "Created in autumn 1971 by Carleton College student teachers Don Rawitsch, Bill Heinemann, "
+            "and Paul Dillenberger for an 8th-grade history class in Minneapolis, running on a CDC Cyber "
+            "timeshare mainframe via teletype. Rewritten and published in Creative Computing (May/June 1978, "
+            "pp. 132-139). Preserved in authentic 1848 historical simulation rules."
+        ),
+        book_source="Creative Computing Magazine (May/June 1978), pp. 132-139.",
+        tags=["History", "Survival", "Pioneers", "Simulation", "Classic 1978", "Playable"],
+    ),
+    "hunt_the_wumpus": GameMetadata(
+        game_id="hunt_the_wumpus",
+        title="HUNT THE WUMPUS",
+        subtitle="The Cave of the Dodecahedron Strategy Adventure",
+        year=1973,
+        author="Gregory Yob (1973), David H. Ahl (1978)",
+        original_publisher="People's Computer Company / Creative Computing",
+        category=GameCategory.ADVENTURE_SPACE,
+        category_display="Adventure & Space",
+        status=GameStatus.PLAYABLE,
+        modes=["Classic 1978 Dodecahedron Cavern", "Sensory Warnings & Crooked Arrow Planner"],
+        description=(
+            "Navigate 20 subterranean caverns connected as a regular dodecahedron. Heed sensory "
+            "warnings ('I smell a Wumpus!', 'I feel a draft.', 'Bats nearby!'), avoid bottomless "
+            "pits and giant snatch-bats, and loose crooked arrows to slay the fearsome Wumpus "
+            "before your arrows or lives run out!"
+        ),
+        rules_summary=(
+            "20 rooms with 3 tunnels each. Hazards: 1 Wumpus, 2 Bottomless Pits, 2 Super Bats. "
+            "Smell Wumpus/feel draft/hear bats when 1 room away. Shoot crooked arrows through "
+            "1-5 connected rooms. Ricochets occur on non-connected paths. 5 arrows total."
+        ),
+        historical_provenance=(
+            "Authored by Gregory Yob in 1973 at Dartmouth College / People's Computer Company in BASIC. "
+            "Yob designed it specifically to break away from traditional Euclidean grid coordinates by "
+            "using a dodecahedral graph. Published in Creative Computing (1975) and BASIC Computer Games "
+            "(1978, pp. 178-181)."
+        ),
+        book_source="BASIC Computer Games: Microcomputer Edition (1978), pp. 178-181.",
+        tags=["Adventure", "Dodecahedron", "Wumpus", "Crooked Arrow", "Classic 1978", "Playable"],
     ),
 }
 

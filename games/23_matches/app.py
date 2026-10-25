@@ -13,7 +13,7 @@ from typing import Callable, List, Optional, Tuple
 
 import pygame
 
-from ui_theme import FontManager, Palette, SoundSynthesizer, UIButton, UIModal
+from ui_theme import CRTEffect, FontManager, Palette, SoundSynthesizer, UIButton, UIModal
 from .engine import (
     MatchesGameState,
     get_computer_move,
@@ -24,6 +24,38 @@ from .engine import (
 
 BASE_WIDTH = 1280
 BASE_HEIGHT = 720
+
+
+class MatchEmber:
+    """Animated ember / spark particle for match lighting and removal."""
+
+    def __init__(self, x: float, y: float) -> None:
+        self.x = x
+        self.y = y
+        angle = random.uniform(-math.pi * 0.85, -math.pi * 0.15)
+        speed = random.uniform(40, 160)
+        self.vx = math.cos(angle) * speed
+        self.vy = math.sin(angle) * speed
+        self.life = random.uniform(0.4, 0.9)
+        self.max_life = self.life
+        self.color = random.choice([Palette.GOLD_LIGHT, Palette.AMBER_WARN, Palette.CRIMSON_LIGHT, (255, 230, 140)])
+        self.radius = random.uniform(1.5, 3.5)
+
+    def update(self, dt: float) -> bool:
+        self.x += self.vx * dt
+        self.y += self.vy * dt
+        self.vy += 60 * dt  # slight downward gravity
+        self.life -= dt
+        return self.life > 0
+
+    def draw(self, surface: pygame.Surface) -> None:
+        if self.life <= 0:
+            return
+        alpha = int(255 * (self.life / self.max_life))
+        r = max(1, int(self.radius * (self.life / self.max_life)))
+        s = pygame.Surface((r * 2 + 2, r * 2 + 2), pygame.SRCALPHA)
+        pygame.draw.circle(s, (*self.color[:3], alpha), (r + 1, r + 1), r)
+        surface.blit(s, (int(self.x - r), int(self.y - r)))
 
 
 class VisualMatch:
@@ -119,6 +151,7 @@ class MatchesApp:
 
         # Matchstick objects
         self.matches: List[VisualMatch] = []
+        self.particles: List[MatchEmber] = []
         self._init_matches()
 
         # UI Buttons
@@ -183,9 +216,20 @@ class MatchesApp:
     def _toggle_rules(self) -> None:
         self.show_rules_modal = not self.show_rules_modal
 
+    def _spawn_sparks_for_matches(self, count: int, before_count: int) -> None:
+        """Spawns ember sparks from the tips of the matchsticks being removed."""
+        for idx in range(max(0, before_count - count), before_count):
+            if idx < len(self.matches):
+                m = self.matches[idx]
+                head_x = m.rect.centerx
+                head_y = m.rect.y + 8
+                for _ in range(14):
+                    self.particles.append(MatchEmber(head_x + random.uniform(-4, 4), head_y + random.uniform(-3, 3)))
+
     def _restart_game(self) -> None:
         self.state = init_game(initial_matches=23, first_player="HUMAN", ai_mode=self.ai_mode)
         self._init_matches()
+        self.particles.clear()
         self.status_message = "New game! Your turn: choose 1, 2, or 3 matches."
         self.ai_pending = False
         self.ai_timer = 0.0
@@ -210,12 +254,15 @@ class MatchesApp:
             self.show_toast(err or "Invalid move")
             return
 
-        SoundSynthesizer.play("click")
+        before_count = self.state.matches_remaining
+        SoundSynthesizer.play("thrust")
         self.state = make_move(self.state, take)
         self._sync_visual_matches()
+        self._spawn_sparks_for_matches(take, before_count)
 
         if self.state.game_over:
-            SoundSynthesizer.play("fanfare" if self.state.winner == "HUMAN" else "warning")
+            self.status_message = "Game Over! You took the final match."
+            SoundSynthesizer.play("fanfare" if self.state.winner == "HUMAN" else "defeat")
             return
 
         # Prepare computer turn with a natural visual thinking pause
@@ -227,13 +274,16 @@ class MatchesApp:
         if self.state.game_over or self.state.current_player != "COMPUTER":
             return
 
+        before_count = self.state.matches_remaining
         comp_take = get_computer_move(self.state)
         self.state = make_move(self.state, comp_take)
         self._sync_visual_matches()
-        SoundSynthesizer.play("harvest")
+        self._spawn_sparks_for_matches(comp_take, before_count)
+        SoundSynthesizer.play("thrust")
 
         if self.state.game_over:
-            SoundSynthesizer.play("fanfare" if self.state.winner == "HUMAN" else "warning")
+            self.status_message = "Game Over! Computer took the final match!"
+            SoundSynthesizer.play("fanfare" if self.state.winner == "HUMAN" else "defeat")
         else:
             self.status_message = f"Computer removed {comp_take} match{'es' if comp_take > 1 else ''}. Your turn!"
 
@@ -245,7 +295,8 @@ class MatchesApp:
             m.is_taken = (i >= rem)
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        canvas_mouse = self._screen_to_canvas(pygame.mouse.get_pos())
+        raw_pos = getattr(event, "pos", pygame.mouse.get_pos())
+        canvas_mouse = self._screen_to_canvas(raw_pos)
 
         if event.type == pygame.QUIT:
             self.is_running = False
@@ -259,7 +310,7 @@ class MatchesApp:
 
         # Modal dismissal
         if self.show_rules_modal:
-            if event.type == pygame.KEYDOWN and event.key in (pygame.K_ESCAPE, pygame.K_RETURN, pygame.K_SPACE):
+            if event.type == pygame.KEYDOWN and event.key in (pygame.K_ESCAPE, pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE):
                 self.show_rules_modal = False
                 return
             self.btn_modal_close.handle_event(event, canvas_mouse)
@@ -280,7 +331,7 @@ class MatchesApp:
             if self.btn_over_library.handle_event(event, canvas_mouse):
                 return
             if event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_r):
+                if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE, pygame.K_r):
                     self._restart_game()
                 elif event.key == pygame.K_ESCAPE:
                     self._on_back_clicked()
@@ -297,7 +348,13 @@ class MatchesApp:
 
         # Keyboard shortcuts
         if event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_1, pygame.K_KP1):
+            if event.key == pygame.K_F2:
+                CRTEffect.toggle()
+                return
+            elif event.key == pygame.K_F3:
+                SoundSynthesizer.set_enabled(not SoundSynthesizer._enabled)
+                return
+            elif event.key in (pygame.K_1, pygame.K_KP1):
                 self._on_human_move(1)
             elif event.key in (pygame.K_2, pygame.K_KP2):
                 self._on_human_move(2)
@@ -312,6 +369,8 @@ class MatchesApp:
                 m.is_hovered = m.rect.collidepoint(canvas_mouse)
 
     def update(self, dt: float) -> None:
+        self.particles = [p for p in self.particles if p.update(dt)]
+
         if self.toast_timer > 0:
             self.toast_timer -= dt
             if self.toast_timer <= 0:
@@ -362,6 +421,16 @@ class MatchesApp:
         for m in self.matches:
             m.draw(self.canvas)
 
+        # Draw particles & embers
+        for p in self.particles:
+            p.draw(self.canvas)
+
+        # Computer Thinking Indicator
+        if self.ai_pending:
+            dots = "." * (int(time.time() * 4) % 4)
+            think_surf = FontManager.header(18).render(f"Computer thinking{dots}", True, Palette.AMBER_WARN)
+            self.canvas.blit(think_surf, think_surf.get_rect(center=(BASE_WIDTH // 2, 450)))
+
         # Table Divider line
         pygame.draw.line(self.canvas, Palette.PANEL_BORDER, (60, 480), (BASE_WIDTH - 60, 480), 1)
 
@@ -377,7 +446,7 @@ class MatchesApp:
 
             # Shortcut hints
             hint = FontManager.small(13).render(
-                "Press [1], [2], or [3] on keyboard  |  [Esc] Back to Library", True, Palette.TEXT_MUTED
+                "Press [1], [2], or [3] on keyboard  |  [F2] CRT Phosphor  |  [F3] Audio  |  [Esc] Back to Library", True, Palette.TEXT_MUTED
             )
             self.canvas.blit(hint, hint.get_rect(center=(BASE_WIDTH // 2, 620)))
 
@@ -500,6 +569,7 @@ class MatchesApp:
         return max(0, min(BASE_WIDTH, cx)), max(0, min(BASE_HEIGHT, cy))
 
     def _present(self) -> None:
+        CRTEffect.apply(self.canvas)
         win_w, win_h = self.screen_width, self.screen_height
         scale = min(win_w / BASE_WIDTH, win_h / BASE_HEIGHT)
         scaled_w = int(BASE_WIDTH * scale)

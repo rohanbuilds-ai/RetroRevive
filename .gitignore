@@ -17,6 +17,9 @@ checkpoint_final_quality_upgrade/
 checkpoint_release_audit/
 checkpoint_platform/
 checkpoint_milestone_2_lander/
+checkpoint_milestone_3_oregon/
+checkpoint_milestone_4_startrek/
+checkpoint_milestone_5_wumpus/
 *.bak
 
 # Game runtime save data
