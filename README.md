@@ -139,8 +139,8 @@ RetroRevive/
 │       └── test_engine.py      # Automated tests for Lunar Lander (17 tests)
 ├── test_game.py                # Hammurabi core unit tests (26 tests)
 ├── test_modern.py              # Hammurabi enhanced unit tests (7 tests)
-├── test_ui.py                  # Hammurabi UI unit tests (27 tests)
-├── test_platform.py            # Platform hub, registry, and UI integration tests (24 tests)
+├── test_ui.py                  # Hammurabi UI unit tests (31 tests)
+├── test_platform.py            # Platform hub, registry, and UI integration tests (28 tests)
 ├── verify_ui.py                # Visual screenshot verification script
 └── docs/
     ├── platform-architecture.md# Comprehensive architecture documentation
@@ -162,18 +162,18 @@ See [`docs/platform-architecture.md`](file:///e:/GitHub%20Projects/RetroRevive/d
 
 RetroRevive enforces rigorous test isolation across core domain engines, modern additions, UI state transitions, and platform navigation.
 
-### Run All 144 Automated Unit Tests
-```powershell
+### Run All 152 Automated Unit Tests
+`powershell
 .venv\Scripts\python.exe -m unittest discover -v
-```
-**Test Suite Breakdown (144 Tests Total):**
+`
+**Test Suite Breakdown (152 Tests Total):**
 - 	est_game.py: **26 tests** (Historical formulas, land prices, harvest, rat infestation, safe prompt recovery, evaluation tiers).
 - 	est_modern.py: **7 tests** (Royal Advisors, Chronicle Log, Scenarios, JSON save/resume roundtrip).
-- 	est_ui.py: **27 tests** (Letterbox scaling, Decree Preview math, numeric steppers, text entry, keyboard navigation, modal focus).
+- 	est_ui.py: **31 tests** (Letterbox scaling, Decree Preview math, numeric steppers, text entry, Enter/Keypad Enter submission, Shift+Tab cycling, synthetic event safety, modal focus).
 - games.23_matches.test_engine: **16 tests** (Initial state, bounds checking, integer validation, Misère termination, Albrecht AI, Optimal AI, repeatable scenarios).
 - games.lunar_lander.test_engine: **17 tests** (Initial LEM state, burn rate validation, 5th-order Taylor series deceleration, free-fall under gravity, touchdown interpolation, 4 landing outcome tiers, crater depth formula).
 - games.oregon_trail.test_engine: **20 tests** (Pioneer party initialization, profession multipliers, travel consumption, starvation health drain, oxen loss halts, resting and illness cure, hunting minimum ammo, successful and skunked hunt meat yields, shallow ford vs deep river, ferry tolls, distance store inflation, victory score math).
-- 	est_platform.py: **31 tests** (Game Registry catalog queries, 4 playable games filter, category filters, substring search, card cycling, details modal, launch/return lifecycle, 23 Matches UI interaction, Lunar Lander telemetry and controls, Oregon Trail journey travel, pace/rations cycling, store purchasing, restart).
+- 	est_platform.py: **35 tests** (Game Registry catalog queries, 4 playable games filter, category filters, substring search, card cycling, details modal, launch/return lifecycle, 23 Matches UI interaction and keypad shortcuts, Lunar Lander telemetry, M flight manual toggle, Oregon Trail journey travel, pace/rations cycling, store purchasing, restart).
 
 ### Run Automated Headless Visual UI Verification
 ```powershell

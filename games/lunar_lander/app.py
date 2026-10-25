@@ -248,7 +248,8 @@ class LanderApp:
                 SoundSynthesizer.play("warning")
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        canvas_mouse = self._screen_to_canvas(pygame.mouse.get_pos())
+        raw_pos = getattr(event, "pos", pygame.mouse.get_pos())
+        canvas_mouse = self._screen_to_canvas(raw_pos)
 
         if event.type == pygame.QUIT:
             self.is_running = False
@@ -262,7 +263,9 @@ class LanderApp:
 
         # Rules Modal Event Handling
         if self.show_rules_modal:
-            if event.type == pygame.KEYDOWN and event.key in (pygame.K_ESCAPE, pygame.K_RETURN, pygame.K_SPACE):
+            if event.type == pygame.KEYDOWN and event.key in (
+                pygame.K_ESCAPE, pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE, pygame.K_m, pygame.K_f
+            ):
                 self.show_rules_modal = False
                 return
             self.btn_rules_close.handle_event(event, canvas_mouse)
@@ -283,7 +286,7 @@ class LanderApp:
             if self.btn_modal_library.handle_event(event, canvas_mouse):
                 return
             if event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_r):
+                if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE, pygame.K_r):
                     self._restart_flight()
                 elif event.key == pygame.K_ESCAPE:
                     self._on_back_clicked()
@@ -301,7 +304,7 @@ class LanderApp:
 
         # Keyboard shortcuts
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
+            if event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER):
                 self._execute_burn()
             elif event.key in (pygame.K_0, pygame.K_KP0):
                 self._set_burn(0.0)
@@ -311,8 +314,10 @@ class LanderApp:
                 self._set_burn(100.0)
             elif event.key in (pygame.K_3, pygame.K_KP3):
                 self._set_burn(150.0)
-            elif event.key in (pygame.K_4, pygame.K_KP4, pygame.K_m):
+            elif event.key in (pygame.K_4, pygame.K_KP4, pygame.K_x):
                 self._set_burn(200.0)
+            elif event.key in (pygame.K_m, pygame.K_f):
+                self._toggle_rules()
             elif event.key == pygame.K_h:
                 self._set_hover_burn()
             elif event.key == pygame.K_UP:

@@ -308,7 +308,7 @@ class RetroReviveHub:
                 if event.key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
                     self._close_modal()
                     return
-                elif event.key == pygame.K_RETURN:
+                elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     self._launch_modal_game()
                     return
             if self.selected_game_for_modal.is_playable and self.btn_modal_launch.handle_event(event, canvas_mouse):
@@ -338,11 +338,13 @@ class RetroReviveHub:
             if event.key == pygame.K_BACKSPACE:
                 self.search_query = self.search_query[:-1]
                 self._refresh_game_cards()
-            elif event.key in (pygame.K_RETURN, pygame.K_ESCAPE):
+            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_ESCAPE):
                 self.is_search_active = False
-            elif event.unicode and event.unicode.isprintable():
-                self.search_query += event.unicode
-                self._refresh_game_cards()
+            else:
+                u_char = getattr(event, "unicode", "")
+                if u_char and u_char.isprintable():
+                    self.search_query += u_char
+                    self._refresh_game_cards()
             return
 
         # Game Card Clicks
@@ -375,7 +377,7 @@ class RetroReviveHub:
             elif event.key == pygame.K_d:
                 if self.cards and 0 <= self.selected_card_index < len(self.cards):
                     self._open_details(self.cards[self.selected_card_index].meta)
-            elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
+            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE):
                 if self.cards and 0 <= self.selected_card_index < len(self.cards):
                     card = self.cards[self.selected_card_index]
                     if card.meta.is_playable:

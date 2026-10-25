@@ -74,8 +74,8 @@ RetroRevive/
 │       └── test_engine.py      # Automated tests for travel, river, store & scoring (20 tests)
 ├── test_game.py                # Historical Hammurabi unit tests (26 tests)
 ├── test_modern.py              # Enhanced Hammurabi unit tests (7 tests)
-├── test_ui.py                  # Hammurabi UI unit tests (27 tests)
-├── test_platform.py            # Platform Hub, Registry, and Navigation tests (31 tests)
+├── test_ui.py                  # Hammurabi UI unit tests (31 tests)
+├── test_platform.py            # Platform Hub, Registry, and Navigation tests (35 tests)
 ├── verify_ui.py                # Headless visual verification & screenshot generator
 ├── docs/
 │   ├── platform-architecture.md# Platform design and extensibility guide
